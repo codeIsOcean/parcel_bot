@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Базовые стили для Telegram Mini App */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  background-color: var(--tg-theme-bg-color, #000000);
+  color: var(--tg-theme-text-color, #FFFFFF);
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 72px; /* Место для bottom nav */
+}
+
+/* Карточки */
+.card {
+  background: #1C1C1E;
+  border: 1px solid #2C2C2E;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Кнопки */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.1s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+  opacity: 0.8;
+}
+
+.btn-primary {
+  background: #6C5CE7;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #2C2C2E;
+  color: #fff;
+}
+
+.btn-success {
+  background: #30D158;
+  color: #fff;
+}
+
+.btn-danger {
+  background: #FF453A;
+  color: #fff;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #2C2C2E;
+  color: #fff;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Инпуты */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #2C2C2E;
+  border: 1px solid #3A3A3C;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: #6C5CE7;
+}
+
+.input::placeholder {
+  color: #8E8E93;
+}
+
+/* Чипсы (фильтры) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #3A3A3C;
+  color: #8E8E93;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.chip.active {
+  background: #6C5CE7;
+  border-color: #6C5CE7;
+  color: #fff;
+}
+
+/* Бейджи */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-green {
+  background: rgba(48, 209, 88, 0.15);
+  color: #30D158;
+}
+
+.badge-purple {
+  background: rgba(108, 92, 231, 0.15);
+  color: #A29BFE;
+}
+
+.badge-yellow {
+  background: rgba(255, 214, 10, 0.15);
+  color: #FFD60A;
+}
+
+.badge-red {
+  background: rgba(255, 69, 58, 0.15);
+  color: #FF453A;
+}
+
+/* Аватар */
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* Скелетон загрузки */
+.skeleton {
+  background: linear-gradient(90deg, #2C2C2E 25%, #3A3A3C 50%, #2C2C2E 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Разделитель */
+.divider {
+  height: 1px;
+  background: #2C2C2E;
+  margin: 12px 0;
+}
+
+/* Скрытый скролл */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Анимации */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter-from {
+  transform: translateY(20px);
+  opacity: 0;
+}
+
+.slide-up-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}
