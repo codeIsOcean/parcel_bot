@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.95); } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes starPop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    body { margin: 0; background: #0a0a0a; font-family: 'Manrope', sans-serif; }
+  </style>
+</helmet>
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="375,812">
+    <div style="display: flex; flex-direction: column; height: 100%; background: #000; position: relative; overflow: hidden; padding-top: 48px;">
+
+      <!-- ============ ONBOARDING SCREEN ============ -->
+      <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 56px; margin-bottom: 16px;">📦✈️</div>
+            <div style="font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 8px;">Parcel Bot</div>
+            <div style="font-size: 15px; color: #8E8E93; line-height: 1.5;">{{ t_onboardingSub }}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div onClick="{{ onboardSender }}" style="background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s;" style-active="transform: scale(0.97);">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 22px;">📦</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 16px; font-weight: 700; color: #fff;">{{ t_iWantToSend }}</div>
+                  <div style="font-size: 13px; color: #8E8E93; margin-top: 2px;">{{ t_iWantToSendSub }}</div>
+                </div>
+                <div style="color: #6C5CE7; font-size: 18px;">›</div>
+              </div>
+            </div>
+            <div onClick="{{ onboardTraveler }}" style="background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s;" style-active="transform: scale(0.97);">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #30D158, #0a8f3f); display: flex; align-items: center; justify-content: center; font-size: 22px;">✈️</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 16px; font-weight: 700; color: #fff;">{{ t_iWantToCarry }}</div>
+                  <div style="font-size: 13px; color: #8E8E93; margin-top: 2px;">{{ t_iWantToCarrySub }}</div>
+                </div>
+                <div style="color: #30D158; font-size: 18px;">›</div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 24px;">
+            <div onClick="{{ skipOnboarding }}" style="font-size: 14px; color: #636366; cursor: pointer;">{{ t_alreadyHaveAccount }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ REGISTRATION SCREEN ============ -->
+      <sc-if value="{{ isRegistration }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 30px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goOnboarding }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_registration }}</div>
+          </div>
+          <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="text-align: center; margin-bottom: 8px;">
+              <div style="width: 72px; height: 72px; border-radius: 36px; background: linear-gradient(135deg, #6C5CE7, #a855f7); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer;">📷</div>
+              <div style="font-size: 13px; color: #8E8E93;">{{ t_addPhotoProfile }}</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_yourName }}</div>
+              <input type="text" placeholder="{{ t_namePlaceholder }}" style="width: 100%; box-sizing: border-box; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: inherit; outline: none;">
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_phone }}</div>
+              <input type="tel" placeholder="+7 (___) ___-__-__" style="width: 100%; box-sizing: border-box; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px 16px; color: #fff; font-size: 15px; font-family: inherit; outline: none;">
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_city }}</div>
+              <div onClick="{{ openRegCity }}" style="background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 15px; color: #636366;">{{ t_selectCityReg }}</div>
+                <div style="color: #636366;">▾</div>
+              </div>
+            </div>
+
+            <!-- ID Verification -->
+            <div style="margin-top: 8px; background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <div style="font-size: 18px;">🛡️</div>
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ t_verification }}</div>
+                  <div style="font-size: 12px; color: #8E8E93;">{{ t_verificationSub }}</div>
+                </div>
+              </div>
+              <div onClick="{{ uploadPassport }}" style="background: #2C2C2E; border: 2px dashed #3A3A3C; border-radius: 10px; padding: 16px; text-align: center; cursor: pointer;">
+                <div style="font-size: 24px; margin-bottom: 4px;">📄</div>
+                <div style="font-size: 13px; color: #8E8E93;">{{ t_uploadPassport }}</div>
+              </div>
+            </div>
+
+            <div onClick="{{ completeRegistration }}" style="margin-top: 8px; background: #6C5CE7; border-radius: 14px; padding: 16px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;" style-active="transform: scale(0.97); opacity: 0.9;">{{ t_register }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ HOME SCREEN ============ -->
+      <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <!-- Header -->
+          <div style="padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 13px; color: #8E8E93; font-weight: 500;">{{ greeting }}</div>
+              <div style="font-size: 22px; font-weight: 800; color: #fff; margin-top: 2px;">Parcel Bot</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div onClick="{{ goNotifications }}" style="width: 36px; height: 36px; border-radius: 18px; background: #1C1C1E; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; font-size: 16px;">🔔
+                <sc-if value="{{ hasUnreadNotifs }}" hint-placeholder-val="{{ true }}">
+                  <div style="position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; border-radius: 4px; background: #FF453A;"></div>
+                </sc-if>
+              </div>
+              <div onClick="{{ goProfile }}" style="width: 40px; height: 40px; border-radius: 20px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: 700; color: #fff;">A</div>
+            </div>
+          </div>
+
+          <!-- Role Switcher -->
+          <div style="margin: 4px 20px 16px; display: flex; background: #1C1C1E; border-radius: 12px; padding: 3px;">
+            <div onClick="{{ setRoleSender }}" style="flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; transition: all 0.3s; background: {{ senderTabBg }}; color: {{ senderTabColor }};">📦 {{ t_send }}</div>
+            <div onClick="{{ setRoleTraveler }}" style="flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; transition: all 0.3s; background: {{ travelerTabBg }}; color: {{ travelerTabColor }};">✈️ {{ t_travel }}</div>
+          </div>
+
+          <!-- SENDER VIEW -->
+          <sc-if value="{{ isSender }}" hint-placeholder-val="{{ true }}">
+            <!-- Route Selector -->
+            <div style="padding: 0 20px; margin-bottom: 16px;">
+              <div style="background: #1C1C1E; border-radius: 16px; padding: 16px; border: 1px solid #2C2C2E;">
+                <div style="font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">{{ t_route }}</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1;">
+                    <div onClick="{{ openFromCity }}" style="background: #2C2C2E; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                      <div style="width: 8px; height: 8px; border-radius: 4px; background: #30D158;"></div>
+                      <div style="font-size: 15px; color: {{ fromCityColor }}; font-weight: 500;">{{ fromCity }}</div>
+                    </div>
+                  </div>
+                  <div onClick="{{ swapCities }}" style="width: 32px; height: 32px; border-radius: 16px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; flex-shrink: 0;">⇄</div>
+                  <div style="flex: 1;">
+                    <div onClick="{{ openToCity }}" style="background: #2C2C2E; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                      <div style="width: 8px; height: 8px; border-radius: 4px; background: #FF453A;"></div>
+                      <div style="font-size: 15px; color: {{ toCityColor }}; font-weight: 500;">{{ toCity }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div onClick="{{ searchTravelers }}" style="margin-top: 14px; background: #6C5CE7; border-radius: 12px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;" style-active="transform: scale(0.97); opacity: 0.9;">{{ t_findTravelers }}</div>
+              </div>
+            </div>
+
+            <!-- Popular Routes -->
+            <div style="padding: 0 20px; margin-bottom: 16px;">
+              <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px;">{{ t_popularRoutes }}</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <sc-for list="{{ popularRoutes }}" as="route" hint-placeholder-count="4">
+                  <div onClick="{{ route.onSelect }}" style="background: #1C1C1E; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid #2C2C2E;" style-active="transform: scale(0.98);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <div style="font-size: 22px;">{{ route.emoji }}</div>
+                      <div>
+                        <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ route.label }}</div>
+                        <div style="font-size: 12px; color: #8E8E93; margin-top: 2px;">{{ route.travelers }}</div>
+                      </div>
+                    </div>
+                    <div style="color: #6C5CE7; font-size: 18px;">›</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <!-- Active Deliveries -->
+            <sc-if value="{{ hasActiveDeliveries }}" hint-placeholder-val="{{ true }}">
+              <div style="padding: 0 20px; margin-bottom: 16px;">
+                <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px;">{{ t_activeDeliveries }}</div>
+                <sc-for list="{{ activeDeliveries }}" as="d" hint-placeholder-count="1">
+                  <div onClick="{{ d.onTap }}" style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E; cursor: pointer;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                      <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ d.route }}</div>
+                      <div style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: {{ d.statusBg }}; color: {{ d.statusColor }};">{{ d.status }}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="width: 28px; height: 28px; border-radius: 14px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; font-size: 12px;">{{ d.avatar }}</div>
+                      <div style="font-size: 13px; color: #8E8E93;">{{ d.courierName }}</div>
+                      <div style="display: flex; align-items: center; gap: 2px; margin-left: auto;">
+                        <div style="color: #FFD60A; font-size: 12px;">★</div>
+                        <div style="font-size: 13px; color: #8E8E93;">{{ d.rating }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </sc-if>
+
+          <!-- TRAVELER VIEW -->
+          <sc-if value="{{ isTraveler }}" hint-placeholder-val="{{ false }}">
+            <!-- Publish Flight Card -->
+            <div style="padding: 0 20px; margin-bottom: 16px;">
+              <div onClick="{{ goPublishFlight }}" style="background: linear-gradient(135deg, #6C5CE7 0%, #a855f7 100%); border-radius: 16px; padding: 20px; cursor: pointer;" style-active="transform: scale(0.98);">
+                <div style="font-size: 24px; margin-bottom: 8px;">✈️</div>
+                <div style="font-size: 17px; font-weight: 700; color: #fff;">{{ t_publishFlight }}</div>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px;">{{ t_publishFlightSub }}</div>
+              </div>
+            </div>
+
+            <!-- Subscription Banner -->
+            <div style="padding: 0 20px; margin-bottom: 16px;">
+              <div onClick="{{ goSubscription }}" style="background: #1C1C1E; border-radius: 14px; padding: 14px 16px; border: 1px solid #2C2C2E; display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #FFD60A, #f39c12); display: flex; align-items: center; justify-content: center; font-size: 18px;">⭐</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ t_subscription }}</div>
+                  <div style="font-size: 12px; color: #30D158;">{{ t_trialActive }}</div>
+                </div>
+                <div style="color: #636366; font-size: 16px;">›</div>
+              </div>
+            </div>
+
+            <!-- My Flights -->
+            <div style="padding: 0 20px; margin-bottom: 16px;">
+              <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px;">{{ t_myFlights }}</div>
+              <sc-for list="{{ myFlights }}" as="flight" hint-placeholder-count="2">
+                <div onClick="{{ flight.onTap }}" style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E; margin-bottom: 8px; cursor: pointer;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ flight.route }}</div>
+                    <div style="font-size: 12px; color: #8E8E93;">{{ flight.date }}</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 13px; color: #8E8E93;">{{ flight.kgFree }}</div>
+                    <div style="font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(108,92,231,0.2); color: #6C5CE7;">{{ flight.requests }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- Incoming Requests -->
+            <div style="padding: 0 20px; margin-bottom: 16px;">
+              <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px;">{{ t_incomingRequests }}</div>
+              <sc-for list="{{ incomingRequests }}" as="req" hint-placeholder-count="2">
+                <div style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 18px; background: {{ req.avatarBg }}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff;">{{ req.avatar }}</div>
+                    <div style="flex: 1;">
+                      <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ req.name }}</div>
+                      <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                        <div style="color: #FFD60A; font-size: 11px;">★</div>
+                        <div style="font-size: 12px; color: #8E8E93;">{{ req.rating }}</div>
+                      </div>
+                    </div>
+                    <div style="text-align: right;">
+                      <div style="font-size: 13px; font-weight: 600; color: #6C5CE7;">{{ req.weight }}</div>
+                      <div style="font-size: 13px; font-weight: 700; color: #30D158;">{{ req.price }}</div>
+                    </div>
+                  </div>
+                  <div style="font-size: 13px; color: #AEAEB2; margin-bottom: 12px;">{{ req.description }}</div>
+                  <div style="display: flex; gap: 8px;">
+                    <div onClick="{{ req.onDecline }}" style="flex: 1; padding: 10px; text-align: center; background: #2C2C2E; border-radius: 10px; font-size: 13px; font-weight: 600; color: #FF453A; cursor: pointer;">{{ t_decline }}</div>
+                    <div onClick="{{ req.onCounter }}" style="flex: 1; padding: 10px; text-align: center; background: #2C2C2E; border-radius: 10px; font-size: 13px; font-weight: 600; color: #FFD60A; cursor: pointer;">{{ t_counterOffer }}</div>
+                    <div onClick="{{ req.onAccept }}" style="flex: 1; padding: 10px; text-align: center; background: #6C5CE7; border-radius: 10px; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer;">{{ t_accept }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ============ TRAVELERS LIST SCREEN ============ -->
+      <sc-if value="{{ isTravelersList }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goHome }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div>
+              <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_travelers }}</div>
+              <div style="font-size: 13px; color: #8E8E93;">{{ selectedRoute }}</div>
+            </div>
+          </div>
+          <div style="padding: 12px 20px; display: flex; gap: 8px; overflow-x: auto;">
+            <sc-for list="{{ filterChips }}" as="chip" hint-placeholder-count="4">
+              <div onClick="{{ chip.onTap }}" style="padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; background: {{ chip.bg }}; color: {{ chip.color }}; border: 1px solid {{ chip.border }};">{{ chip.label }}</div>
+            </sc-for>
+          </div>
+          <div style="padding: 0 20px;">
+            <sc-for list="{{ travelerCards }}" as="tc" hint-placeholder-count="4">
+              <div onClick="{{ tc.onTap }}" style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E; margin-bottom: 10px; cursor: pointer;" style-active="transform: scale(0.98);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                  <div style="width: 44px; height: 44px; border-radius: 22px; background: {{ tc.avatarBg }}; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff;">{{ tc.initials }}</div>
+                  <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ tc.name }}</div>
+                      <sc-if value="{{ tc.verified }}" hint-placeholder-val="{{ true }}">
+                        <div style="font-size: 12px; color: #30D158;">✓</div>
+                      </sc-if>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+                      <div style="color: #FFD60A; font-size: 12px;">★</div>
+                      <div style="font-size: 13px; color: #AEAEB2; font-weight: 500;">{{ tc.rating }} · {{ tc.trips }}</div>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: 14px; font-weight: 700; color: #6C5CE7;">{{ tc.kgFree }}</div>
+                    <div style="font-size: 12px; color: #8E8E93;">{{ tc.date }}</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <div style="font-size: 12px; color: #8E8E93; background: #2C2C2E; padding: 4px 8px; border-radius: 6px;">{{ tc.flightInfo }}</div>
+                  <sc-if value="{{ tc.priceHint }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-size: 12px; color: #30D158; background: rgba(48,209,88,0.1); padding: 4px 8px; border-radius: 6px;">{{ tc.priceHint }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ SEND PARCEL + BID FLOW ============ -->
+      <sc-if value="{{ isSendForm }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 30px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goTravelersList }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_sendParcel }}</div>
+          </div>
+
+          <!-- Traveler mini card -->
+          <div style="margin: 8px 20px 16px; background: #1C1C1E; border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; border: 1px solid #2C2C2E;">
+            <div style="width: 40px; height: 40px; border-radius: 20px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff;">{{ selectedTravelerInit }}</div>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ selectedTravelerName }}</div>
+              <div style="font-size: 12px; color: #8E8E93;">{{ selectedTravelerInfo }}</div>
+            </div>
+          </div>
+
+          <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_parcelDesc }}</div>
+              <textarea placeholder="{{ t_parcelDescPh }}" style="width: 100%; box-sizing: border-box; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; font-family: inherit; resize: none; min-height: 70px; outline: none;" onfocus="this.style.borderColor='#6C5CE7'" onblur="this.style.borderColor='#2C2C2E'"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <div style="flex: 1;">
+                <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_weight }}</div>
+                <div style="display: flex; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; overflow: hidden;">
+                  <input type="number" placeholder="0" style="flex: 1; background: transparent; border: none; padding: 12px; color: #fff; font-size: 15px; font-family: inherit; outline: none; width: 50px;">
+                  <div style="padding: 12px; color: #8E8E93; font-size: 14px; font-weight: 600;">{{ t_kg }}</div>
+                </div>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_size }}</div>
+                <div onClick="{{ cycleSize }}" style="background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                  <div style="font-size: 15px; color: #fff;">{{ parcelSizeLabel }}</div>
+                  <div style="color: #8E8E93;">▾</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_photo }}</div>
+              <div onClick="{{ addPhoto }}" style="background: #1C1C1E; border: 2px dashed #2C2C2E; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer;">
+                <div style="font-size: 24px; margin-bottom: 4px;">📷</div>
+                <div style="font-size: 13px; color: #8E8E93;">{{ t_addPhoto }}</div>
+              </div>
+              <sc-if value="{{ hasPhotos }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                  <sc-for list="{{ photos }}" as="photo" hint-placeholder-count="2">
+                    <div style="width: 56px; height: 56px; border-radius: 10px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative;">📦
+                      <div onClick="{{ photo.onRemove }}" style="position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; border-radius: 9px; background: #FF453A; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; cursor: pointer;">×</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+
+            <!-- Price Bid Section (InDriver style) -->
+            <div style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E;">
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_yourOffer }}</div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div onClick="{{ decreaseOffer }}" style="width: 40px; height: 40px; border-radius: 20px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #fff;">−</div>
+                <div style="flex: 1; text-align: center;">
+                  <div style="font-size: 32px; font-weight: 800; color: #6C5CE7;">${{ offerPrice }}</div>
+                </div>
+                <div onClick="{{ increaseOffer }}" style="width: 40px; height: 40px; border-radius: 20px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #fff;">+</div>
+              </div>
+              <div style="display: flex; gap: 6px; justify-content: center; margin-bottom: 8px;">
+                <sc-for list="{{ quickPrices }}" as="qp" hint-placeholder-count="4">
+                  <div onClick="{{ qp.onTap }}" style="padding: 6px 12px; border-radius: 8px; background: {{ qp.bg }}; color: {{ qp.color }}; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid {{ qp.border }};">{{ qp.label }}</div>
+                </sc-for>
+              </div>
+              <div style="font-size: 12px; color: #636366; text-align: center;">{{ t_avgPrice }}: $8–12/{{ t_kg }}</div>
+            </div>
+
+            <div onClick="{{ submitParcel }}" style="margin-top: 4px; background: #6C5CE7; border-radius: 14px; padding: 16px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;" style-active="transform: scale(0.97); opacity: 0.9;">{{ t_sendRequest }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ CHAT LIST SCREEN ============ -->
+      <sc-if value="{{ isChatList }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 12px;">
+            <div style="font-size: 22px; font-weight: 800; color: #fff;">{{ t_chats }}</div>
+          </div>
+          <sc-if value="{{ hasChatItems }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ chatItems }}" as="ci" hint-placeholder-count="4">
+              <div onClick="{{ ci.onTap }}" style="padding: 14px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #1C1C1E;" style-active="background: #1C1C1E;">
+                <div style="position: relative;">
+                  <div style="width: 48px; height: 48px; border-radius: 24px; background: {{ ci.avatarBg }}; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff;">{{ ci.initials }}</div>
+                  <sc-if value="{{ ci.isOnline }}" hint-placeholder-val="{{ true }}">
+                    <div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 6px; background: #30D158; border: 2px solid #000;"></div>
+                  </sc-if>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ ci.name }}</div>
+                    <div style="font-size: 12px; color: #636366;">{{ ci.time }}</div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3px;">
+                    <div style="font-size: 13px; color: #8E8E93; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">{{ ci.lastMessage }}</div>
+                    <sc-if value="{{ ci.unread }}" hint-placeholder-val="{{ true }}">
+                      <div style="min-width: 20px; height: 20px; border-radius: 10px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; padding: 0 6px;">{{ ci.unreadCount }}</div>
+                    </sc-if>
+                  </div>
+                  <div style="font-size: 11px; color: #636366; margin-top: 2px;">{{ ci.route }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ noChatItems }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 60px 40px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+              <div style="font-size: 15px; color: #636366;">{{ t_noChatsYet }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ============ CHAT SCREEN ============ -->
+      <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; height: 100%;">
+          <div style="padding: 12px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #2C2C2E;">
+            <div onClick="{{ goChatList }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="width: 36px; height: 36px; border-radius: 18px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff;">{{ chatPartnerInit }}</div>
+            <div style="flex: 1;">
+              <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ chatPartnerName }}</div>
+              <div style="font-size: 12px; color: #30D158;">{{ t_online }}</div>
+            </div>
+            <div onClick="{{ goPartnerProfile }}" style="font-size: 12px; color: #6C5CE7; font-weight: 600; cursor: pointer;">{{ t_profile }}</div>
+          </div>
+          <!-- Parcel Info Banner -->
+          <div style="margin: 12px 20px; background: #1C1C1E; border-radius: 12px; padding: 12px; border: 1px solid #2C2C2E;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 13px; color: #8E8E93;">{{ chatRoute }}</div>
+              <div style="font-size: 13px; font-weight: 600; color: #6C5CE7;">{{ chatWeight }}</div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; padding: 0 20px;">
+            <sc-for list="{{ chatMessages }}" as="msg" hint-placeholder-count="4">
+              <div style="display: flex; justify-content: {{ msg.align }}; margin-bottom: 8px;">
+                <div style="max-width: 75%; padding: 10px 14px; border-radius: {{ msg.radius }}; background: {{ msg.bg }}; color: {{ msg.color }};">
+                  <sc-if value="{{ msg.isBid }}" hint-placeholder-val="{{ false }}">
+                    <div style="background: rgba(108,92,231,0.15); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; border: 1px solid rgba(108,92,231,0.3);">
+                      <div style="font-size: 11px; color: #8E8E93; margin-bottom: 2px;">{{ msg.bidLabel }}</div>
+                      <div style="font-size: 18px; font-weight: 800; color: #6C5CE7;">{{ msg.bidAmount }}</div>
+                    </div>
+                  </sc-if>
+                  <div style="font-size: 14px; line-height: 1.4;">{{ msg.text }}</div>
+                  <div style="font-size: 11px; color: {{ msg.timeColor }}; margin-top: 4px; text-align: right;">{{ msg.time }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding: 12px 20px; border-top: 1px solid #2C2C2E; display: flex; gap: 8px; align-items: center;">
+            <div onClick="{{ sendBidMsg }}" style="width: 36px; height: 36px; border-radius: 18px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;">💰</div>
+            <input type="text" placeholder="{{ t_typeMessage }}" style="flex: 1; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 20px; padding: 10px 16px; color: #fff; font-size: 14px; font-family: inherit; outline: none;">
+            <div onClick="{{ sendMessage }}" style="width: 36px; height: 36px; border-radius: 18px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #fff;">↑</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ RATING SCREEN ============ -->
+      <sc-if value="{{ isRating }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px;">
+          <div style="text-align: center; margin-bottom: 32px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">📦</div>
+            <div style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px;">{{ t_rateDelivery }}</div>
+            <div style="font-size: 14px; color: #8E8E93;">{{ ratingPartnerName }}</div>
+          </div>
+          <!-- Stars -->
+          <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;">
+            <sc-for list="{{ ratingStars }}" as="star" hint-placeholder-count="5">
+              <div onClick="{{ star.onTap }}" style="font-size: 36px; cursor: pointer; transition: all 0.15s; color: {{ star.color }};" style-active="transform: scale(1.3);">{{ star.icon }}</div>
+            </sc-for>
+          </div>
+          <div style="text-align: center; font-size: 14px; color: #8E8E93; margin-bottom: 20px;">{{ ratingLabel }}</div>
+          <!-- Comment -->
+          <textarea placeholder="{{ t_ratingCommentPh }}" style="width: 100%; box-sizing: border-box; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; font-family: inherit; resize: none; min-height: 60px; outline: none; margin-bottom: 16px;" onfocus="this.style.borderColor='#6C5CE7'" onblur="this.style.borderColor='#2C2C2E'"></textarea>
+          <div onClick="{{ submitRating }}" style="background: #6C5CE7; border-radius: 14px; padding: 16px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;" style-active="transform: scale(0.97);">{{ t_submitRating }}</div>
+          <div onClick="{{ skipRating }}" style="text-align: center; margin-top: 12px; font-size: 14px; color: #636366; cursor: pointer;">{{ t_skipRating }}</div>
+        </div>
+      </sc-if>
+
+      <!-- ============ PROFILE SCREEN ============ -->
+      <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goHome }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_profile }}</div>
+          </div>
+          <div style="padding: 20px; text-align: center;">
+            <div style="width: 80px; height: 80px; border-radius: 40px; background: linear-gradient(135deg, #6C5CE7, #a855f7); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff;">A</div>
+            <div style="font-size: 20px; font-weight: 700; color: #fff;">{{ profileName }}</div>
+            <div style="font-size: 14px; color: #8E8E93; margin-top: 4px;">{{ profileJoined }}</div>
+          </div>
+          <div style="display: flex; padding: 0 20px; gap: 8px; margin-bottom: 20px;">
+            <div style="flex: 1; background: #1C1C1E; border-radius: 14px; padding: 16px; text-align: center; border: 1px solid #2C2C2E;">
+              <div style="font-size: 22px; font-weight: 800; color: #6C5CE7;">{{ profileRating }}</div>
+              <div style="font-size: 12px; color: #8E8E93; margin-top: 4px;">{{ t_rating }}</div>
+            </div>
+            <div style="flex: 1; background: #1C1C1E; border-radius: 14px; padding: 16px; text-align: center; border: 1px solid #2C2C2E;">
+              <div style="font-size: 22px; font-weight: 800; color: #30D158;">{{ profileDeliveries }}</div>
+              <div style="font-size: 12px; color: #8E8E93; margin-top: 4px;">{{ t_deliveries }}</div>
+            </div>
+            <div style="flex: 1; background: #1C1C1E; border-radius: 14px; padding: 16px; text-align: center; border: 1px solid #2C2C2E;">
+              <div style="font-size: 22px; font-weight: 800; color: #FFD60A;">{{ profileReviews }}</div>
+              <div style="font-size: 12px; color: #8E8E93; margin-top: 4px;">{{ t_reviews }}</div>
+            </div>
+          </div>
+          <div style="margin: 0 20px 16px; background: rgba(48,209,88,0.1); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 20px;">✓</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 600; color: #30D158;">{{ t_verified }}</div>
+              <div style="font-size: 12px; color: #8E8E93;">{{ t_verifiedSub }}</div>
+            </div>
+          </div>
+          <div style="padding: 0 20px;">
+            <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px;">{{ t_recentReviews }}</div>
+            <sc-for list="{{ reviews }}" as="rev" hint-placeholder-count="3">
+              <div style="background: #1C1C1E; border-radius: 12px; padding: 14px; margin-bottom: 8px; border: 1px solid #2C2C2E;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ rev.name }}</div>
+                  <div style="display: flex; gap: 2px;">
+                    <sc-for list="{{ rev.stars }}" as="s" hint-placeholder-count="5">
+                      <div style="color: #FFD60A; font-size: 12px;">★</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="font-size: 13px; color: #AEAEB2; line-height: 1.4;">{{ rev.text }}</div>
+                <div style="font-size: 11px; color: #636366; margin-top: 6px;">{{ rev.date }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 8px;">
+            <div onClick="{{ goSettings }}" style="background: #1C1C1E; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid #2C2C2E;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="font-size: 18px;">⚙️</div>
+                <div style="font-size: 14px; font-weight: 500; color: #fff;">{{ t_settings }}</div>
+              </div>
+              <div style="color: #636366; font-size: 16px;">›</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ TRACKING SCREEN ============ -->
+      <sc-if value="{{ isTracking }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 12px;">
+            <div style="font-size: 22px; font-weight: 800; color: #fff;">{{ t_myParcels }}</div>
+          </div>
+          <!-- Tabs -->
+          <div style="padding: 0 20px; margin-bottom: 16px; display: flex; gap: 8px;">
+            <sc-for list="{{ parcelTabs }}" as="pt" hint-placeholder-count="3">
+              <div onClick="{{ pt.onTap }}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; background: {{ pt.bg }}; color: {{ pt.color }}; border: 1px solid {{ pt.border }};">{{ pt.label }}</div>
+            </sc-for>
+          </div>
+          <sc-for list="{{ parcelList }}" as="pl" hint-placeholder-count="2">
+            <div onClick="{{ pl.onTap }}" style="margin: 0 20px 10px; background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E; cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ pl.route }}</div>
+                <div style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: {{ pl.statusBg }}; color: {{ pl.statusColor }};">{{ pl.status }}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <div style="width: 28px; height: 28px; border-radius: 14px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; font-size: 12px;">{{ pl.avatar }}</div>
+                <div style="font-size: 13px; color: #8E8E93;">{{ pl.partnerName }}</div>
+                <div style="display: flex; align-items: center; gap: 2px; margin-left: auto;">
+                  <div style="color: #FFD60A; font-size: 12px;">★</div>
+                  <div style="font-size: 13px; color: #8E8E93;">{{ pl.rating }}</div>
+                </div>
+              </div>
+              <!-- Progress bar -->
+              <div style="height: 4px; background: #2C2C2E; border-radius: 2px; overflow: hidden;">
+                <div style="height: 100%; width: {{ pl.progress }}; background: {{ pl.progressColor }}; border-radius: 2px;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                <div style="font-size: 11px; color: #636366;">{{ pl.date }}</div>
+                <div style="font-size: 11px; color: #636366;">{{ pl.weight }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- ============ TRACKING DETAIL ============ -->
+      <sc-if value="{{ isTrackingDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goTracking }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_tracking }}</div>
+          </div>
+          <div style="margin: 12px 20px; background: #1C1C1E; border-radius: 16px; padding: 20px; border: 1px solid #2C2C2E;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+              <div>
+                <div style="font-size: 17px; font-weight: 700; color: #fff;">{{ trackingRoute }}</div>
+                <div style="font-size: 13px; color: #8E8E93; margin-top: 4px;">{{ trackingDate }}</div>
+              </div>
+              <div style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: rgba(108,92,231,0.2); color: #6C5CE7; height: fit-content;">{{ trackingStatus }}</div>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-top: 16px;">
+              <sc-for list="{{ trackingSteps }}" as="step" hint-placeholder-count="5">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="width: 12px; height: 12px; border-radius: 6px; background: {{ step.dotColor }}; border: 2px solid {{ step.dotBorder }};"></div>
+                    <sc-if value="{{ step.showLine }}" hint-placeholder-val="{{ true }}">
+                      <div style="width: 2px; height: 32px; background: {{ step.lineColor }};"></div>
+                    </sc-if>
+                  </div>
+                  <div style="padding-bottom: 16px;">
+                    <div style="font-size: 14px; font-weight: 600; color: {{ step.titleColor }};">{{ step.title }}</div>
+                    <div style="font-size: 12px; color: #636366; margin-top: 2px;">{{ step.time }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <!-- Courier card -->
+          <div style="margin: 0 20px; background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E;">
+            <div style="font-size: 13px; font-weight: 600; color: #8E8E93; margin-bottom: 10px;">{{ t_courier }}</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff;">{{ trackCourierInit }}</div>
+              <div style="flex: 1;">
+                <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ trackCourierName }}</div>
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                  <div style="color: #FFD60A; font-size: 12px;">★</div>
+                  <div style="font-size: 13px; color: #AEAEB2;">{{ trackCourierRating }}</div>
+                </div>
+              </div>
+              <div onClick="{{ openChatFromTracking }}" style="width: 40px; height: 40px; border-radius: 20px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;">💬</div>
+            </div>
+          </div>
+          <!-- Rate & Review buttons -->
+          <div style="margin: 16px 20px; display: flex; flex-direction: column; gap: 8px;">
+            <div onClick="{{ openRating }}" style="background: linear-gradient(135deg, #FFD60A, #f39c12); border-radius: 14px; padding: 16px; text-align: center; font-size: 16px; font-weight: 700; color: #000; cursor: pointer;">⭐ {{ t_rateNow }}</div>
+            <div onClick="{{ openChatFromTracking }}" style="background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 14px; padding: 14px; text-align: center; font-size: 15px; font-weight: 600; color: #6C5CE7; cursor: pointer;">💬 {{ t_writeMessage }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ PUBLISH FLIGHT SCREEN ============ -->
+      <sc-if value="{{ isPublishFlight }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 30px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goHome }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_publishFlight }}</div>
+          </div>
+          <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E;">
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">{{ t_route }}</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="flex: 1;">
+                  <div onClick="{{ openFromCity }}" style="background: #2C2C2E; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; border-radius: 4px; background: #30D158;"></div>
+                    <div style="font-size: 15px; color: {{ fromCityColor }}; font-weight: 500;">{{ fromCity }}</div>
+                  </div>
+                </div>
+                <div onClick="{{ swapCities }}" style="width: 32px; height: 32px; border-radius: 16px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; flex-shrink: 0;">⇄</div>
+                <div style="flex: 1;">
+                  <div onClick="{{ openToCity }}" style="background: #2C2C2E; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; border-radius: 4px; background: #FF453A;"></div>
+                    <div style="font-size: 15px; color: {{ toCityColor }}; font-weight: 500;">{{ toCity }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_flightDate }}</div>
+              <input type="date" style="width: 100%; box-sizing: border-box; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; padding: 12px; color: #fff; font-size: 15px; font-family: inherit; outline: none; color-scheme: dark;">
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_availableKg }}</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div onClick="{{ decreaseKg }}" style="width: 40px; height: 40px; border-radius: 20px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #fff;">−</div>
+                <div style="font-size: 28px; font-weight: 800; color: #6C5CE7; min-width: 60px; text-align: center;">{{ availableKg }}</div>
+                <div onClick="{{ increaseKg }}" style="width: 40px; height: 40px; border-radius: 20px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #fff;">+</div>
+                <div style="font-size: 14px; color: #8E8E93;">{{ t_kg }}</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_pricePerKg }}</div>
+              <div style="display: flex; background: #1C1C1E; border: 1px solid #2C2C2E; border-radius: 12px; overflow: hidden;">
+                <div style="padding: 12px; color: #8E8E93; font-size: 14px; font-weight: 600;">$</div>
+                <input type="number" placeholder="0" style="flex: 1; background: transparent; border: none; padding: 12px; color: #fff; font-size: 15px; font-family: inherit; outline: none;">
+                <div style="padding: 12px; color: #8E8E93; font-size: 13px;">/{{ t_kg }}</div>
+              </div>
+            </div>
+            <div onClick="{{ publishFlight }}" style="margin-top: 4px; background: #6C5CE7; border-radius: 14px; padding: 16px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;" style-active="transform: scale(0.97);">{{ t_publish }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ SUBSCRIPTION SCREEN ============ -->
+      <sc-if value="{{ isSubscription }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 200px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goHome }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_subscription }}</div>
+          </div>
+          <!-- Current plan -->
+          <div style="margin: 16px 20px; background: linear-gradient(135deg, #6C5CE7, #a855f7); border-radius: 16px; padding: 24px; text-align: center;">
+            <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">{{ t_currentPlan }}</div>
+            <div style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 4px;">{{ t_trialPlan }}</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.8);">{{ t_trialDaysLeft }}</div>
+          </div>
+          <!-- Plans -->
+          <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">{{ t_choosePlan }}</div>
+            <sc-for list="{{ subPlans }}" as="plan" hint-placeholder-count="3">
+              <div onClick="{{ plan.onSelect }}" style="background: #1C1C1E; border-radius: 14px; padding: 18px; border: 2px solid {{ plan.border }}; cursor: pointer; position: relative; overflow: hidden;">
+                <sc-if value="{{ plan.popular }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 0; right: 0; background: #6C5CE7; padding: 4px 12px; border-radius: 0 0 0 10px; font-size: 11px; font-weight: 700; color: #fff;">{{ t_popular }}</div>
+                </sc-if>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 16px; font-weight: 700; color: #fff;">{{ plan.title }}</div>
+                    <div style="font-size: 13px; color: #8E8E93; margin-top: 2px;">{{ plan.perMonth }}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: 20px; font-weight: 800; color: #6C5CE7;">{{ plan.price }}</div>
+                    <sc-if value="{{ plan.discount }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size: 12px; color: #30D158; font-weight: 600;">{{ plan.discount }}</div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <!-- Payment methods -->
+            <div style="margin-top: 12px; font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_paymentMethod }}</div>
+            <div style="display: flex; gap: 8px;">
+              <div onClick="{{ selectPayStars }}" style="flex: 1; background: #1C1C1E; border-radius: 12px; padding: 14px; text-align: center; border: 2px solid {{ payStarsBorder }}; cursor: pointer;">
+                <div style="font-size: 20px; margin-bottom: 4px;">⭐</div>
+                <div style="font-size: 12px; font-weight: 600; color: #fff;">Telegram Stars</div>
+              </div>
+              <div onClick="{{ selectPayTon }}" style="flex: 1; background: #1C1C1E; border-radius: 12px; padding: 14px; text-align: center; border: 2px solid {{ payTonBorder }}; cursor: pointer;">
+                <div style="font-size: 20px; margin-bottom: 4px;">💎</div>
+                <div style="font-size: 12px; font-weight: 600; color: #fff;">TON</div>
+              </div>
+            </div>
+
+            <!-- Payment details -->
+            <sc-if value="{{ showPayDetails }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #1C1C1E; border-radius: 14px; padding: 16px; border: 1px solid #2C2C2E; margin-top: 8px;">
+                <div style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 12px;">{{ payDetailTitle }}</div>
+                <sc-if value="{{ isPayStars }}" hint-placeholder-val="{{ true }}">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 13px; color: #8E8E93;">{{ t_plan }}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #fff;">{{ selectedPlanTitle }}</div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 13px; color: #8E8E93;">{{ t_amount }}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #FFD60A;">{{ starsAmount }}</div>
+                  </div>
+                  <div style="font-size: 12px; color: #636366; margin-bottom: 12px; line-height: 1.4;">{{ t_starsNote }}</div>
+                  <div onClick="{{ payWithStars }}" style="background: linear-gradient(135deg, #FFD60A, #f39c12); border-radius: 12px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: #000; cursor: pointer;">⭐ {{ t_payStars }}</div>
+                </sc-if>
+                <sc-if value="{{ isPayTon }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 13px; color: #8E8E93;">{{ t_plan }}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #fff;">{{ selectedPlanTitle }}</div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-size: 13px; color: #8E8E93;">{{ t_amount }}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #0098EA;">{{ tonAmount }}</div>
+                  </div>
+                  <div style="background: #2C2C2E; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+                    <div style="font-size: 11px; color: #8E8E93; margin-bottom: 4px;">{{ t_walletAddress }}</div>
+                    <div style="font-size: 12px; color: #fff; font-family: monospace; word-break: break-all;">UQBx...7kPa</div>
+                    <div style="font-size: 11px; color: #8E8E93; margin-top: 6px;">MEMO:</div>
+                    <div style="font-size: 14px; color: #0098EA; font-weight: 700; font-family: monospace;">{{ tonMemo }}</div>
+                  </div>
+                  <div style="font-size: 12px; color: #636366; margin-bottom: 12px; line-height: 1.4;">{{ t_tonNote }}</div>
+                  <div onClick="{{ payWithTon }}" style="background: linear-gradient(135deg, #0098EA, #0077CC); border-radius: 12px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;">💎 {{ t_payTon }}</div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <div onClick="{{ subscribePay }}" style="margin-top: 12px; background: #6C5CE7; border-radius: 14px; padding: 16px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;" style-active="transform: scale(0.97);">{{ t_subscribe }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ NOTIFICATIONS SCREEN ============ -->
+      <sc-if value="{{ isNotifications }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goHome }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_notifications }}</div>
+          </div>
+          <sc-for list="{{ notifications }}" as="notif" hint-placeholder-count="5">
+            <div onClick="{{ notif.onTap }}" style="padding: 14px 20px; display: flex; gap: 12px; cursor: pointer; border-bottom: 1px solid #1C1C1E; background: {{ notif.bg }};">
+              <div style="width: 40px; height: 40px; border-radius: 12px; background: {{ notif.iconBg }}; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">{{ notif.icon }}</div>
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 600; color: #fff;">{{ notif.title }}</div>
+                <div style="font-size: 13px; color: #8E8E93; margin-top: 2px; line-height: 1.3;">{{ notif.body }}</div>
+                <div style="font-size: 11px; color: #636366; margin-top: 4px;">{{ notif.time }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- ============ SETTINGS SCREEN ============ -->
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 70px;">
+          <div style="padding: 16px 20px 8px; display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goProfile }}" style="width: 44px; height: 44px; border-radius: 22px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #fff;">‹</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">{{ t_settings }}</div>
+          </div>
+          <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 12px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_language }}</div>
+            <sc-for list="{{ languages }}" as="lang" hint-placeholder-count="3">
+              <div onClick="{{ lang.onSelect }}" style="background: #1C1C1E; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid {{ lang.borderColor }};">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="font-size: 20px;">{{ lang.flag }}</div>
+                  <div style="font-size: 14px; font-weight: 500; color: #fff;">{{ lang.name }}</div>
+                </div>
+                <sc-if value="{{ lang.selected }}" hint-placeholder-val="{{ false }}">
+                  <div style="width: 20px; height: 20px; border-radius: 10px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff;">✓</div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_suggestRoute }}</div>
+            <div style="background: #1C1C1E; border-radius: 12px; padding: 14px 16px; border: 1px solid #2C2C2E;">
+              <input type="text" placeholder="{{ t_suggestRoutePh }}" style="width: 100%; box-sizing: border-box; background: transparent; border: none; color: #fff; font-size: 14px; font-family: inherit; outline: none;">
+            </div>
+            <div onClick="{{ submitRouteSuggestion }}" style="background: #2C2C2E; border-radius: 12px; padding: 12px; text-align: center; font-size: 14px; font-weight: 600; color: #6C5CE7; cursor: pointer;">{{ t_submitSuggestion }}</div>
+            <div style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.5px;">{{ t_notifSettings }}</div>
+            <div style="background: #1C1C1E; border-radius: 12px; border: 1px solid #2C2C2E; overflow: hidden;">
+              <sc-for list="{{ notifToggles }}" as="nt" hint-placeholder-count="3">
+                <div onClick="{{ nt.onToggle }}" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border-bottom: 1px solid #2C2C2E;">
+                  <div style="font-size: 14px; font-weight: 500; color: #fff;">{{ nt.label }}</div>
+                  <div style="width: 44px; height: 26px; border-radius: 13px; background: {{ nt.toggleBg }}; padding: 2px; transition: all 0.3s;">
+                    <div style="width: 22px; height: 22px; border-radius: 11px; background: #fff; transition: all 0.3s; transform: {{ nt.togglePos }};"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ CITY PICKER MODAL ============ -->
+      <sc-if value="{{ showCityPicker }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeCityPicker }}" style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: flex-end;">
+          <div onClick="{{ stopProp }}" style="width: 100%; background: #1C1C1E; border-radius: 20px 20px 0 0; padding: 20px; max-height: 70%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div style="font-size: 17px; font-weight: 700; color: #fff;">{{ t_selectCity }}</div>
+              <div onClick="{{ closeCityPicker }}" style="font-size: 14px; color: #6C5CE7; font-weight: 600; cursor: pointer; padding: 8px;">{{ t_close }}</div>
+            </div>
+            <input type="text" placeholder="{{ t_searchCity }}" style="width: 100%; box-sizing: border-box; background: #2C2C2E; border: none; border-radius: 10px; padding: 12px 16px; color: #fff; font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px;">
+            <!-- Custom city option -->
+            <div onClick="{{ addCustomCity }}" style="padding: 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: rgba(108,92,231,0.1); border: 1px dashed #6C5CE7; margin-bottom: 8px;">
+              <div style="font-size: 18px;">✏️</div>
+              <div>
+                <div style="font-size: 14px; font-weight: 600; color: #6C5CE7;">{{ t_customCity }}</div>
+                <div style="font-size: 12px; color: #8E8E93;">{{ t_customCitySub }}</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto;">
+              <sc-for list="{{ cityOptions }}" as="city" hint-placeholder-count="6">
+                <div onClick="{{ city.onSelect }}" style="padding: 14px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px;" style-hover="background: #2C2C2E;">
+                  <div style="font-size: 20px;">{{ city.flag }}</div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 500; color: #fff;">{{ city.name }}</div>
+                    <div style="font-size: 12px; color: #636366;">{{ city.country }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ COUNTER OFFER MODAL ============ -->
+      <sc-if value="{{ showCounterOffer }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ cancelCounter }}" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 30px;">
+          <div onClick="{{ stopProp }}" style="background: #1C1C1E; border-radius: 20px; padding: 24px; width: 100%;">
+            <div style="font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px;">{{ t_counterOffer }}</div>
+            <div style="font-size: 13px; color: #8E8E93; margin-bottom: 16px;">{{ t_counterOfferSub }}</div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+              <div onClick="{{ decreaseCounter }}" style="width: 40px; height: 40px; border-radius: 20px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #fff;">−</div>
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 32px; font-weight: 800; color: #6C5CE7;">${{ counterPrice }}</div>
+              </div>
+              <div onClick="{{ increaseCounter }}" style="width: 40px; height: 40px; border-radius: 20px; background: #2C2C2E; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #fff;">+</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <div onClick="{{ cancelCounter }}" style="flex: 1; padding: 14px; text-align: center; background: #2C2C2E; border-radius: 12px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer;">{{ t_cancel }}</div>
+              <div onClick="{{ sendCounter }}" style="flex: 1; padding: 14px; text-align: center; background: #6C5CE7; border-radius: 12px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;">{{ t_sendOffer }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ SUCCESS MODAL ============ -->
+      <sc-if value="{{ showSuccess }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeSuccess }}" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 30px;">
+          <div onClick="{{ stopProp }}" style="background: #1C1C1E; border-radius: 20px; padding: 32px; text-align: center; width: 100%;">
+            <div style="font-size: 48px; margin-bottom: 16px;">{{ successIcon }}</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px;">{{ successTitle }}</div>
+            <div style="font-size: 14px; color: #8E8E93; margin-bottom: 24px; line-height: 1.4;">{{ successMessage }}</div>
+            <div onClick="{{ closeSuccess }}" style="background: #6C5CE7; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;">OK</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ BOTTOM NAV ============ -->
+      <sc-if value="{{ showBottomNav }}" hint-placeholder-val="{{ true }}">
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #1C1C1E; border-top: 1px solid #2C2C2E; display: flex; padding: 8px 0 20px; z-index: 50;">
+          <sc-for list="{{ navItems }}" as="nav" hint-placeholder-count="4">
+            <div onClick="{{ nav.onTap }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; position: relative;">
+              <div style="font-size: 22px; opacity: {{ nav.opacity }};">{{ nav.icon }}</div>
+              <div style="font-size: 10px; font-weight: 600; color: {{ nav.color }};">{{ nav.label }}</div>
+              <sc-if value="{{ nav.badge }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; top: -2px; right: 50%; margin-right: -16px; min-width: 16px; height: 16px; border-radius: 8px; background: #FF453A; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; padding: 0 4px;">{{ nav.badgeCount }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 420, &quot;height&quot;: 860}, &quot;language&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;ru&quot;, &quot;en&quot;], &quot;default&quot;: &quot;ru&quot;, &quot;section&quot;: &quot;Настройки&quot;}, &quot;defaultRole&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;sender&quot;, &quot;traveler&quot;], &quot;default&quot;: &quot;sender&quot;, &quot;section&quot;: &quot;Настройки&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'home',
+    role: 'sender',
+    lang: 'ru',
+    fromCity: null,
+    toCity: null,
+    cityPickerTarget: null,
+    showCityPicker: false,
+    showSuccess: false,
+    showCounterOffer: false,
+    successIcon: '✅',
+    successTitle: '',
+    successMessage: '',
+    availableKg: 5,
+    parcelSize: 0,
+    selectedTraveler: null,
+    photos: [],
+    offerPrice: 30,
+    counterPrice: 25,
+    ratingScore: 0,
+    parcelTab: 'active',
+    payMethod: 'stars',
+    selectedPlan: 1,
+    notifications: { newRequests: true, messages: true, statusUpdates: true },
+    chatMessages: []
+  };
+
+  t(ru, en) { return this.state.lang === 'ru' ? ru : en; }
+
+  componentDidMount() {
+    const lang = this.props.language ?? 'ru';
+    const role = this.props.defaultRole ?? 'sender';
+    this.setState({ lang, role, chatMessages: this.getChatMessages(lang) });
+  }
+
+  getChatMessages(lang) {
+    const t = (ru, en) => lang === 'ru' ? ru : en;
+    return [
+      { from: 'them', text: t('Здравствуйте! Могу взять вашу посылку. Что за груз?', 'Hello! I can take your parcel. What is it?'), time: '14:20', isBid: false },
+      { from: 'me', text: t('Привет! Документы и коробка, 2кг', 'Hi! Documents and a box, 2kg'), time: '14:22', isBid: false },
+      { from: 'them', text: '', time: '14:23', isBid: true, bidLabel: t('Предложение', 'Offer'), bidAmount: '$25' },
+      { from: 'me', text: '', time: '14:24', isBid: true, bidLabel: t('Контр-предложение', 'Counter-offer'), bidAmount: '$30' },
+      { from: 'them', text: t('Давайте за $28, встречаемся завтра?', 'How about $28, meet tomorrow?'), time: '14:25', isBid: false },
+      { from: 'me', text: t('Договорились! Где встречаемся?', 'Deal! Where do we meet?'), time: '14:26', isBid: false },
+    ];
+  }
+
+  showSuccessModal(icon, title, message) {
+    this.setState({ showSuccess: true, successIcon: icon, successTitle: title, successMessage: message });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const t = this.t.bind(this);
+
+    const cities = [
+      { id: 'dubai', name: t('Дубай', 'Dubai'), flag: '🇦🇪', country: t('ОАЭ', 'UAE') },
+      { id: 'almaty', name: t('Алматы', 'Almaty'), flag: '🇰🇿', country: t('Казахстан', 'Kazakhstan') },
+      { id: 'moscow', name: t('Москва', 'Moscow'), flag: '🇷🇺', country: t('Россия', 'Russia') },
+      { id: 'newyork', name: t('Нью-Йорк', 'New York'), flag: '🇺🇸', country: t('США', 'USA') },
+      { id: 'istanbul', name: t('Стамбул', 'Istanbul'), flag: '🇹🇷', country: t('Турция', 'Turkey') },
+      { id: 'astana', name: t('Астана', 'Astana'), flag: '🇰🇿', country: t('Казахстан', 'Kazakhstan') },
+      { id: 'london', name: t('Лондон', 'London'), flag: '🇬🇧', country: t('Великобритания', 'UK') },
+      { id: 'bangkok', name: t('Бангкок', 'Bangkok'), flag: '🇹🇭', country: t('Таиланд', 'Thailand') },
+    ];
+
+    const getCity = (id) => cities.find(c => c.id === id);
+    const fromCityObj = getCity(s.fromCity);
+    const toCityObj = getCity(s.toCity);
+    const sizes = [t('Маленькая', 'Small'), t('Средняя', 'Medium'), t('Большая', 'Large')];
+
+    const popularRoutes = [
+      { emoji: '🇦🇪🇰🇿', label: t('Дубай → Алматы', 'Dubai → Almaty'), travelers: t('12 попутчиков', '12 travelers'), onSelect: () => this.setState({ fromCity: 'dubai', toCity: 'almaty', screen: 'travelersList' }) },
+      { emoji: '🇦🇪🇷🇺', label: t('Дубай → Москва', 'Dubai → Moscow'), travelers: t('8 попутчиков', '8 travelers'), onSelect: () => this.setState({ fromCity: 'dubai', toCity: 'moscow', screen: 'travelersList' }) },
+      { emoji: '🇷🇺🇦🇪', label: t('Москва → Дубай', 'Moscow → Dubai'), travelers: t('15 попутчиков', '15 travelers'), onSelect: () => this.setState({ fromCity: 'moscow', toCity: 'dubai', screen: 'travelersList' }) },
+      { emoji: '🇦🇪🇺🇸', label: t('Дубай → Нью-Йорк', 'Dubai → New York'), travelers: t('5 попутчиков', '5 travelers'), onSelect: () => this.setState({ fromCity: 'dubai', toCity: 'newyork', screen: 'travelersList' }) },
+    ];
+
+    const travelerData = [
+      { name: t('Алексей К.', 'Alexey K.'), initials: 'АК', rating: '4.9', trips: t('23 поездки', '23 trips'), kgFree: '5 ' + t('кг', 'kg'), date: t('5 июля', 'Jul 5'), flightInfo: 'FlyDubai FZ982', priceHint: '~$10/' + t('кг', 'kg'), verified: true, avatarBg: 'linear-gradient(135deg, #6C5CE7, #a855f7)' },
+      { name: t('Мария С.', 'Maria S.'), initials: 'МС', rating: '4.7', trips: t('11 поездок', '11 trips'), kgFree: '3 ' + t('кг', 'kg'), date: t('7 июля', 'Jul 7'), flightInfo: 'Air Astana KC872', priceHint: '~$12/' + t('кг', 'kg'), verified: true, avatarBg: 'linear-gradient(135deg, #FF6B6B, #ee5a24)' },
+      { name: t('Тимур Н.', 'Timur N.'), initials: 'ТН', rating: '5.0', trips: t('47 поездок', '47 trips'), kgFree: '10 ' + t('кг', 'kg'), date: t('6 июля', 'Jul 6'), flightInfo: 'Emirates EK132', priceHint: '~$8/' + t('кг', 'kg'), verified: true, avatarBg: 'linear-gradient(135deg, #30D158, #0a8f3f)' },
+      { name: t('Диана Р.', 'Diana R.'), initials: 'ДР', rating: '4.5', trips: t('6 поездок', '6 trips'), kgFree: '2 ' + t('кг', 'kg'), date: t('8 июля', 'Jul 8'), flightInfo: 'Flydubai FZ984', priceHint: '', verified: false, avatarBg: 'linear-gradient(135deg, #FFD60A, #f39c12)' },
+    ];
+
+    const filterChips = [
+      { label: t('Все', 'All'), bg: '#6C5CE7', color: '#fff', border: '#6C5CE7', onTap: () => {} },
+      { label: t('Скоро', 'Soon'), bg: 'transparent', color: '#8E8E93', border: '#2C2C2E', onTap: () => {} },
+      { label: t('Много кг', 'More kg'), bg: 'transparent', color: '#8E8E93', border: '#2C2C2E', onTap: () => {} },
+      { label: t('Топ ★', 'Top ★'), bg: 'transparent', color: '#8E8E93', border: '#2C2C2E', onTap: () => {} },
+    ];
+
+    const selectedRouteLabel = fromCityObj && toCityObj ? `${fromCityObj.name} → ${toCityObj.name}` : t('Дубай → Алматы', 'Dubai → Almaty');
+    const travelerCards = travelerData.map((tr, i) => ({ ...tr, onTap: () => this.setState({ selectedTraveler: i, screen: 'sendForm' }) }));
+
+    const activeDeliveries = [
+      { route: t('Дубай → Алматы', 'Dubai → Almaty'), status: t('В пути', 'In transit'), statusBg: 'rgba(108,92,231,0.2)', statusColor: '#6C5CE7', avatar: 'ТН', courierName: t('Тимур Н.', 'Timur N.'), rating: '5.0', onTap: () => this.setState({ screen: 'trackingDetail' }) }
+    ];
+
+    const myFlights = [
+      { route: t('Алматы → Дубай', 'Almaty → Dubai'), date: t('10 июля', 'Jul 10'), kgFree: t('8 кг свободно', '8 kg available'), requests: t('3 заявки', '3 requests'), onTap: () => {} },
+      { route: t('Дубай → Москва', 'Dubai → Moscow'), date: t('15 июля', 'Jul 15'), kgFree: t('12 кг свободно', '12 kg available'), requests: t('7 заявок', '7 requests'), onTap: () => {} },
+    ];
+
+    const incomingRequests = [
+      { avatar: 'ОМ', name: t('Олег М.', 'Oleg M.'), rating: '4.8', weight: '3 ' + t('кг', 'kg'), price: '$30', description: t('Электроника, подарки', 'Electronics, gifts'), avatarBg: 'linear-gradient(135deg, #FF6B6B, #ee5a24)', onAccept: () => this.showSuccessModal('✅', t('Заявка принята!', 'Accepted!'), t('Свяжитесь с отправителем', 'Contact the sender')), onDecline: () => {}, onCounter: () => this.setState({ showCounterOffer: true, counterPrice: 25 }) },
+      { avatar: 'АС', name: t('Анна С.', 'Anna S.'), rating: '4.6', weight: '1.5 ' + t('кг', 'kg'), price: '$15', description: t('Документы, книги', 'Documents, books'), avatarBg: 'linear-gradient(135deg, #FFD60A, #f39c12)', onAccept: () => this.showSuccessModal('✅', t('Заявка принята!', 'Accepted!'), t('Свяжитесь с отправителем', 'Contact the sender')), onDecline: () => {}, onCounter: () => this.setState({ showCounterOffer: true, counterPrice: 12 }) },
+    ];
+
+    // Chat list
+    const chatItems = [
+      { initials: 'ТН', name: t('Тимур Н.', 'Timur N.'), avatarBg: 'linear-gradient(135deg, #30D158, #0a8f3f)', isOnline: true, lastMessage: t('Договорились! Где встречаемся?', 'Deal! Where do we meet?'), time: '14:26', route: t('Дубай → Алматы', 'Dubai → Almaty'), unread: true, unreadCount: '2', onTap: () => this.setState({ screen: 'chat' }) },
+      { initials: 'МС', name: t('Мария С.', 'Maria S.'), avatarBg: 'linear-gradient(135deg, #FF6B6B, #ee5a24)', isOnline: false, lastMessage: t('Хорошо, возьму за $35', 'Ok, I\'ll take it for $35'), time: t('Вчера', 'Yesterday'), route: t('Дубай → Москва', 'Dubai → Moscow'), unread: false, unreadCount: '', onTap: () => this.setState({ screen: 'chat' }) },
+      { initials: 'АК', name: t('Алексей К.', 'Alexey K.'), avatarBg: 'linear-gradient(135deg, #6C5CE7, #a855f7)', isOnline: true, lastMessage: t('Посылка доставлена! Спасибо!', 'Parcel delivered! Thanks!'), time: t('2 дня', '2 days'), route: t('Москва → Дубай', 'Moscow → Dubai'), unread: false, unreadCount: '', onTap: () => this.setState({ screen: 'chat' }) },
+    ];
+
+    // Chat messages
+    const chatMsgs = (s.chatMessages || []).map(m => ({
+      text: m.text,
+      time: m.time,
+      isBid: m.isBid || false,
+      bidLabel: m.bidLabel || '',
+      bidAmount: m.bidAmount || '',
+      align: m.from === 'me' ? 'flex-end' : 'flex-start',
+      bg: m.from === 'me' ? '#6C5CE7' : '#2C2C2E',
+      color: '#fff',
+      timeColor: m.from === 'me' ? 'rgba(255,255,255,0.6)' : '#636366',
+      radius: m.from === 'me' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+    }));
+
+    // Quick prices for bid
+    const quickPrices = [
+      { label: '$15', bg: s.offerPrice === 15 ? '#6C5CE7' : 'transparent', color: s.offerPrice === 15 ? '#fff' : '#8E8E93', border: s.offerPrice === 15 ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ offerPrice: 15 }) },
+      { label: '$20', bg: s.offerPrice === 20 ? '#6C5CE7' : 'transparent', color: s.offerPrice === 20 ? '#fff' : '#8E8E93', border: s.offerPrice === 20 ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ offerPrice: 20 }) },
+      { label: '$30', bg: s.offerPrice === 30 ? '#6C5CE7' : 'transparent', color: s.offerPrice === 30 ? '#fff' : '#8E8E93', border: s.offerPrice === 30 ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ offerPrice: 30 }) },
+      { label: '$50', bg: s.offerPrice === 50 ? '#6C5CE7' : 'transparent', color: s.offerPrice === 50 ? '#fff' : '#8E8E93', border: s.offerPrice === 50 ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ offerPrice: 50 }) },
+    ];
+
+    // Rating stars
+    const ratingLabels = ['', t('Ужасно', 'Terrible'), t('Плохо', 'Bad'), t('Нормально', 'OK'), t('Хорошо', 'Good'), t('Отлично!', 'Excellent!')];
+    const ratingStars = [1,2,3,4,5].map(n => ({
+      icon: n <= s.ratingScore ? '★' : '☆',
+      color: n <= s.ratingScore ? '#FFD60A' : '#636366',
+      onTap: () => this.setState({ ratingScore: n })
+    }));
+
+    // Parcel list
+    const parcelTabs = [
+      { label: t('Активные', 'Active'), bg: s.parcelTab === 'active' ? '#6C5CE7' : 'transparent', color: s.parcelTab === 'active' ? '#fff' : '#8E8E93', border: s.parcelTab === 'active' ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ parcelTab: 'active' }) },
+      { label: t('Завершённые', 'Completed'), bg: s.parcelTab === 'completed' ? '#6C5CE7' : 'transparent', color: s.parcelTab === 'completed' ? '#fff' : '#8E8E93', border: s.parcelTab === 'completed' ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ parcelTab: 'completed' }) },
+      { label: t('Все', 'All'), bg: s.parcelTab === 'all' ? '#6C5CE7' : 'transparent', color: s.parcelTab === 'all' ? '#fff' : '#8E8E93', border: s.parcelTab === 'all' ? '#6C5CE7' : '#2C2C2E', onTap: () => this.setState({ parcelTab: 'all' }) },
+    ];
+
+    const parcelList = [
+      { route: t('Дубай → Алматы', 'Dubai → Almaty'), status: t('В пути', 'In transit'), statusBg: 'rgba(108,92,231,0.2)', statusColor: '#6C5CE7', avatar: 'ТН', partnerName: t('Тимур Н.', 'Timur N.'), rating: '5.0', progress: '60%', progressColor: '#6C5CE7', date: t('2 июля', 'Jul 2'), weight: '2 ' + t('кг', 'kg'), onTap: () => this.setState({ screen: 'trackingDetail' }) },
+      { route: t('Москва → Дубай', 'Moscow → Dubai'), status: t('Доставлена', 'Delivered'), statusBg: 'rgba(48,209,88,0.15)', statusColor: '#30D158', avatar: 'АК', partnerName: t('Алексей К.', 'Alexey K.'), rating: '4.9', progress: '100%', progressColor: '#30D158', date: t('28 июня', 'Jun 28'), weight: '3 ' + t('кг', 'kg'), onTap: () => this.setState({ screen: 'trackingDetail' }) },
+    ];
+
+    const trackingSteps = [
+      { title: t('Заявка создана', 'Request created'), time: t('1 июля, 10:30', 'Jul 1, 10:30'), dotColor: '#30D158', dotBorder: '#30D158', lineColor: '#30D158', titleColor: '#fff', showLine: true },
+      { title: t('Курьер принял', 'Courier accepted'), time: t('1 июля, 11:00', 'Jul 1, 11:00'), dotColor: '#30D158', dotBorder: '#30D158', lineColor: '#30D158', titleColor: '#fff', showLine: true },
+      { title: t('Посылка передана', 'Parcel handed over'), time: t('2 июля, 09:00', 'Jul 2, 09:00'), dotColor: '#30D158', dotBorder: '#30D158', lineColor: '#6C5CE7', titleColor: '#fff', showLine: true },
+      { title: t('В пути', 'In transit'), time: t('2 июля, 14:00', 'Jul 2, 14:00'), dotColor: '#6C5CE7', dotBorder: '#6C5CE7', lineColor: '#2C2C2E', titleColor: '#6C5CE7', showLine: true },
+      { title: t('Доставлена', 'Delivered'), time: '', dotColor: '#2C2C2E', dotBorder: '#636366', lineColor: '#2C2C2E', titleColor: '#636366', showLine: false },
+    ];
+
+    const reviews = [
+      { name: t('Олег М.', 'Oleg M.'), text: t('Отличный человек! Посылку доставил вовремя и в целости.', 'Great person! Delivered the parcel on time and intact.'), date: t('28 июня', 'Jun 28'), stars: [1,2,3,4,5] },
+      { name: t('Светлана К.', 'Svetlana K.'), text: t('Надёжный курьер, рекомендую!', 'Reliable courier, highly recommend!'), date: t('25 июня', 'Jun 25'), stars: [1,2,3,4,5] },
+      { name: t('Дмитрий П.', 'Dmitry P.'), text: t('Хорошо, но немного опоздал. В целом доволен.', 'Good, but a bit late. Overall satisfied.'), date: t('20 июня', 'Jun 20'), stars: [1,2,3,4] },
+    ];
+
+    const langs = [
+      { flag: '🇷🇺', name: 'Русский', selected: s.lang === 'ru', borderColor: s.lang === 'ru' ? '#6C5CE7' : '#2C2C2E', onSelect: () => this.setState({ lang: 'ru', chatMessages: this.getChatMessages('ru') }) },
+      { flag: '🇬🇧', name: 'English', selected: s.lang === 'en', borderColor: s.lang === 'en' ? '#6C5CE7' : '#2C2C2E', onSelect: () => this.setState({ lang: 'en', chatMessages: this.getChatMessages('en') }) },
+      { flag: '🇰🇿', name: 'Қазақша', selected: s.lang === 'kz', borderColor: s.lang === 'kz' ? '#6C5CE7' : '#2C2C2E', onSelect: () => this.setState({ lang: 'kz' }) },
+    ];
+
+    const notifToggles = [
+      { label: t('Новые заявки', 'New requests'), toggleBg: s.notifications.newRequests ? '#6C5CE7' : '#636366', togglePos: s.notifications.newRequests ? 'translateX(18px)' : 'translateX(0)', onToggle: () => this.setState(p => ({ notifications: { ...p.notifications, newRequests: !p.notifications.newRequests } })) },
+      { label: t('Сообщения', 'Messages'), toggleBg: s.notifications.messages ? '#6C5CE7' : '#636366', togglePos: s.notifications.messages ? 'translateX(18px)' : 'translateX(0)', onToggle: () => this.setState(p => ({ notifications: { ...p.notifications, messages: !p.notifications.messages } })) },
+      { label: t('Статус доставки', 'Delivery status'), toggleBg: s.notifications.statusUpdates ? '#6C5CE7' : '#636366', togglePos: s.notifications.statusUpdates ? 'translateX(18px)' : 'translateX(0)', onToggle: () => this.setState(p => ({ notifications: { ...p.notifications, statusUpdates: !p.notifications.statusUpdates } })) },
+    ];
+
+    // Subscription plans
+    const planData = [
+      { title: t('1 месяц', '1 month'), price: '$40', perMonth: '$40/' + t('мес', 'mo'), discount: '', stars: '2,800 ⭐', ton: '12.5 TON', idx: 0 },
+      { title: t('3 месяца', '3 months'), price: '$100', perMonth: '$33/' + t('мес', 'mo'), discount: '-17%', stars: '7,000 ⭐', ton: '31 TON', idx: 1 },
+      { title: t('12 месяцев', '12 months'), price: '$300', perMonth: '$25/' + t('мес', 'mo'), discount: '-38%', stars: '21,000 ⭐', ton: '93 TON', idx: 2 },
+    ];
+    const subPlans = planData.map((p, i) => ({
+      ...p,
+      border: s.selectedPlan === i ? '#6C5CE7' : '#2C2C2E',
+      popular: i === 1,
+      onSelect: () => this.setState({ selectedPlan: i })
+    }));
+    const selPlan = planData[s.selectedPlan] || planData[1];
+
+    // Notifications
+    const notifList = [
+      { icon: '📦', iconBg: 'rgba(108,92,231,0.2)', title: t('Новая заявка', 'New request'), body: t('Олег М. хочет отправить 3 кг на маршруте Алматы → Дубай', 'Oleg M. wants to send 3 kg on Almaty → Dubai route'), time: t('5 мин назад', '5 min ago'), bg: 'rgba(108,92,231,0.05)', onTap: () => this.setState({ screen: 'home', role: 'traveler' }) },
+      { icon: '💬', iconBg: 'rgba(48,209,88,0.2)', title: t('Новое сообщение', 'New message'), body: t('Тимур Н.: Договорились! Где встречаемся?', 'Timur N.: Deal! Where do we meet?'), time: t('14 мин назад', '14 min ago'), bg: 'rgba(48,209,88,0.05)', onTap: () => this.setState({ screen: 'chat' }) },
+      { icon: '✈️', iconBg: 'rgba(255,214,10,0.2)', title: t('Статус обновлён', 'Status updated'), body: t('Ваша посылка Дубай → Алматы сейчас "В пути"', 'Your parcel Dubai → Almaty is now "In transit"'), time: t('1 час назад', '1 hour ago'), bg: 'transparent', onTap: () => this.setState({ screen: 'trackingDetail' }) },
+      { icon: '⭐', iconBg: 'rgba(255,214,10,0.2)', title: t('Новый отзыв', 'New review'), body: t('Алексей К. оставил 5 ★ и комментарий', 'Alexey K. left 5 ★ and a comment'), time: t('Вчера', 'Yesterday'), bg: 'transparent', onTap: () => this.setState({ screen: 'profile' }) },
+      { icon: '🛡️', iconBg: 'rgba(48,209,88,0.2)', title: t('Верификация', 'Verification'), body: t('Ваш паспорт успешно проверен!', 'Your passport has been verified!'), time: t('2 дня назад', '2 days ago'), bg: 'transparent', onTap: () => {} },
+    ];
+
+    const selectedTr = s.selectedTraveler != null ? travelerData[s.selectedTraveler] : travelerData[0];
+
+    const showNav = ['home', 'tracking', 'chatList', 'profile'].includes(s.screen);
+
+    const navItems = [
+      { icon: '🏠', label: t('Главная', 'Home'), color: s.screen === 'home' ? '#6C5CE7' : '#636366', opacity: s.screen === 'home' ? '1' : '0.5', badge: false, badgeCount: '', onTap: () => this.setState({ screen: 'home' }) },
+      { icon: '📦', label: t('Посылки', 'Parcels'), color: s.screen === 'tracking' ? '#6C5CE7' : '#636366', opacity: s.screen === 'tracking' ? '1' : '0.5', badge: false, badgeCount: '', onTap: () => this.setState({ screen: 'tracking' }) },
+      { icon: '💬', label: t('Чаты', 'Chats'), color: s.screen === 'chatList' ? '#6C5CE7' : '#636366', opacity: s.screen === 'chatList' ? '1' : '0.5', badge: true, badgeCount: '2', onTap: () => this.setState({ screen: 'chatList' }) },
+      { icon: '👤', label: t('Профиль', 'Profile'), color: s.screen === 'profile' ? '#6C5CE7' : '#636366', opacity: s.screen === 'profile' ? '1' : '0.5', badge: false, badgeCount: '', onTap: () => this.setState({ screen: 'profile' }) },
+    ];
+
+    const cityOptions = cities.map(c => ({
+      ...c,
+      onSelect: () => {
+        if (s.cityPickerTarget === 'from') this.setState({ fromCity: c.id, showCityPicker: false });
+        else this.setState({ toCity: c.id, showCityPicker: false });
+      }
+    }));
+
+    return {
+      // Screen flags
+      isOnboarding: s.screen === 'onboarding',
+      isRegistration: s.screen === 'registration',
+      isHome: s.screen === 'home',
+      isTravelersList: s.screen === 'travelersList',
+      isSendForm: s.screen === 'sendForm',
+      isChatList: s.screen === 'chatList',
+      isChat: s.screen === 'chat',
+      isRating: s.screen === 'rating',
+      isProfile: s.screen === 'profile',
+      isPublishFlight: s.screen === 'publishFlight',
+      isTracking: s.screen === 'tracking',
+      isTrackingDetail: s.screen === 'trackingDetail',
+      isSubscription: s.screen === 'subscription',
+      isNotifications: s.screen === 'notifications',
+      isSettings: s.screen === 'settings',
+      showBottomNav: showNav,
+      showCityPicker: s.showCityPicker,
+      showSuccess: s.showSuccess,
+      showCounterOffer: s.showCounterOffer,
+      hasUnreadNotifs: true,
+
+      // Role
+      isSender: s.role === 'sender',
+      isTraveler: s.role === 'traveler',
+      senderTabBg: s.role === 'sender' ? '#6C5CE7' : 'transparent',
+      senderTabColor: s.role === 'sender' ? '#fff' : '#8E8E93',
+      travelerTabBg: s.role === 'traveler' ? '#6C5CE7' : 'transparent',
+      travelerTabColor: s.role === 'traveler' ? '#fff' : '#8E8E93',
+      setRoleSender: () => this.setState({ role: 'sender' }),
+      setRoleTraveler: () => this.setState({ role: 'traveler' }),
+
+      // Cities
+      fromCity: fromCityObj ? fromCityObj.name : t('Откуда', 'From'),
+      toCity: toCityObj ? toCityObj.name : t('Куда', 'To'),
+      fromCityColor: fromCityObj ? '#fff' : '#636366',
+      toCityColor: toCityObj ? '#fff' : '#636366',
+      openFromCity: () => this.setState({ showCityPicker: true, cityPickerTarget: 'from' }),
+      openToCity: () => this.setState({ showCityPicker: true, cityPickerTarget: 'to' }),
+      swapCities: () => this.setState(p => ({ fromCity: p.toCity, toCity: p.fromCity })),
+      closeCityPicker: () => this.setState({ showCityPicker: false }),
+      cityOptions,
+
+      greeting: t('Добро пожаловать 👋', 'Welcome 👋'),
+      // Custom city
+      addCustomCity: () => this.showSuccessModal('✏️', t('Введите город', 'Enter city'), t('Напишите название города и страну. Мы добавим маршрут!', 'Type the city name and country. We will add the route!')),
+      t_customCity: t('Другой город', 'Other city'),
+      t_customCitySub: t('Нет вашего города? Введите вручную', 'City not listed? Enter manually'),
+
+      popularRoutes, activeDeliveries, hasActiveDeliveries: true,
+      myFlights, incomingRequests, filterChips,
+      travelerCards, selectedRoute: selectedRouteLabel,
+      reviews, languages: langs, notifToggles, navItems,
+      chatItems, hasChatItems: true, noChatItems: false,
+      parcelTabs, parcelList, subPlans,
+      notifications: notifList,
+
+      // Send form
+      selectedTravelerInit: selectedTr.initials,
+      selectedTravelerName: selectedTr.name,
+      selectedTravelerInfo: `★ ${selectedTr.rating} · ${selectedTr.kgFree} · ${selectedTr.date}`,
+      parcelSizeLabel: sizes[s.parcelSize],
+      cycleSize: () => this.setState(p => ({ parcelSize: (p.parcelSize + 1) % 3 })),
+      addPhoto: () => this.setState(p => ({ photos: [...p.photos, { id: Date.now() }] })),
+      hasPhotos: s.photos.length > 0,
+      photos: s.photos.map(p => ({ ...p, onRemove: () => this.setState(prev => ({ photos: prev.photos.filter(pp => pp.id !== p.id) })) })),
+
+      // Bid / offer
+      offerPrice: s.offerPrice,
+      decreaseOffer: () => this.setState(p => ({ offerPrice: Math.max(5, p.offerPrice - 5) })),
+      increaseOffer: () => this.setState(p => ({ offerPrice: Math.min(200, p.offerPrice + 5) })),
+      quickPrices,
+      submitParcel: () => this.showSuccessModal('📦', t('Заявка отправлена!', 'Request sent!'), t('Ваше предложение: $' + s.offerPrice + '. Ожидайте ответа.', 'Your offer: $' + s.offerPrice + '. Waiting for response.')),
+
+      // Counter offer
+      counterPrice: s.counterPrice,
+      decreaseCounter: () => this.setState(p => ({ counterPrice: Math.max(5, p.counterPrice - 5) })),
+      increaseCounter: () => this.setState(p => ({ counterPrice: Math.min(200, p.counterPrice + 5) })),
+      cancelCounter: () => this.setState({ showCounterOffer: false }),
+      sendCounter: () => { this.setState({ showCounterOffer: false }); this.showSuccessModal('💰', t('Контр-предложение отправлено!', 'Counter-offer sent!'), '$' + s.counterPrice); },
+
+      // Chat
+      chatPartnerInit: 'ТН', chatPartnerName: t('Тимур Н.', 'Timur N.'),
+      chatRoute: selectedRouteLabel, chatWeight: '2 ' + t('кг', 'kg'),
+      chatMessages: chatMsgs,
+      sendMessage: () => this.setState(p => ({ chatMessages: [...p.chatMessages, { from: 'me', text: t('Хорошо, до завтра! 👍', 'Alright, see you tomorrow! 👍'), time: '14:30', isBid: false }] })),
+      sendBidMsg: () => this.setState(p => ({ chatMessages: [...p.chatMessages, { from: 'me', text: '', time: '14:31', isBid: true, bidLabel: t('Моё предложение', 'My offer'), bidAmount: '$28' }] })),
+
+      // Rating
+      ratingStars,
+      ratingScore: s.ratingScore,
+      ratingLabel: ratingLabels[s.ratingScore] || '',
+      ratingPartnerName: t('Тимур Н. — Дубай → Алматы', 'Timur N. — Dubai → Almaty'),
+      submitRating: () => { this.setState({ screen: 'home' }); this.showSuccessModal('⭐', t('Спасибо за оценку!', 'Thanks for rating!'), t('Вы поставили ' + s.ratingScore + ' ★', 'You gave ' + s.ratingScore + ' ★')); },
+      skipRating: () => this.setState({ screen: 'home' }),
+
+      // Profile
+      profileName: t('Андрей', 'Andrey'), profileJoined: t('С марта 2026', 'Since March 2026'),
+      profileRating: '4.9', profileDeliveries: '34', profileReviews: '28',
+
+      // Subscription payment
+      payStarsBorder: s.payMethod === 'stars' ? '#6C5CE7' : '#2C2C2E',
+      payTonBorder: s.payMethod === 'ton' ? '#6C5CE7' : '#2C2C2E',
+      selectPayStars: () => this.setState({ payMethod: 'stars' }),
+      selectPayTon: () => this.setState({ payMethod: 'ton' }),
+      showPayDetails: true,
+      isPayStars: s.payMethod === 'stars',
+      isPayTon: s.payMethod === 'ton',
+      payDetailTitle: s.payMethod === 'stars' ? t('Оплата через Telegram Stars', 'Pay with Telegram Stars') : t('Оплата через TON', 'Pay with TON'),
+      selectedPlanTitle: selPlan.title,
+      starsAmount: selPlan.stars,
+      tonAmount: selPlan.ton,
+      tonMemo: 'PB-' + Math.floor(Math.random() * 90000 + 10000),
+      payWithStars: () => this.showSuccessModal('⭐', t('Оплата прошла!', 'Payment successful!'), t('Подписка активирована на ' + selPlan.title, 'Subscription activated for ' + selPlan.title)),
+      payWithTon: () => this.showSuccessModal('💎', t('Ожидаем подтверждение', 'Awaiting confirmation'), t('Транзакция обрабатывается. Обычно занимает 1-3 минуты.', 'Transaction is processing. Usually takes 1-3 minutes.')),
+      subscribePay: () => {
+        if (s.payMethod === 'stars') this.showSuccessModal('⭐', t('Оплата прошла!', 'Payment successful!'), t('Подписка активирована', 'Subscription activated'));
+        else this.showSuccessModal('💎', t('Ожидаем подтверждение', 'Awaiting confirmation'), t('Отправьте TON по адресу выше с указанным MEMO', 'Send TON to the address above with the MEMO'));
+      },
+      t_plan: t('План', 'Plan'),
+      t_amount: t('Сумма', 'Amount'),
+      t_starsNote: t('Оплата через Telegram. Средства списываются моментально.', 'Payment via Telegram. Funds are charged instantly.'),
+      t_tonNote: t('Отправьте точную сумму с MEMO кодом. Подписка активируется автоматически после подтверждения.', 'Send the exact amount with the MEMO code. Subscription activates automatically after confirmation.'),
+      t_payStars: t('Оплатить Stars', 'Pay with Stars'),
+      t_payTon: t('Открыть кошелёк', 'Open wallet'),
+      t_walletAddress: t('Адрес кошелька', 'Wallet address'),
+      t_subscribe: t('Подписаться', 'Subscribe'),
+      t_writeMessage: t('Написать сообщение', 'Write a message'),
+
+      // Tracking
+      trackingRoute: t('Дубай → Алматы', 'Dubai → Almaty'),
+      trackingDate: t('2 июля 2026', 'July 2, 2026'),
+      trackingStatus: t('В пути', 'In transit'),
+      trackingSteps,
+      trackCourierInit: 'ТН', trackCourierName: t('Тимур Н.', 'Timur N.'), trackCourierRating: '5.0',
+      openRating: () => this.setState({ screen: 'rating', ratingScore: 0 }),
+
+      // Publish flight
+      availableKg: s.availableKg,
+      decreaseKg: () => this.setState(p => ({ availableKg: Math.max(1, p.availableKg - 1) })),
+      increaseKg: () => this.setState(p => ({ availableKg: Math.min(30, p.availableKg + 1) })),
+      publishFlight: () => this.showSuccessModal('✈️', t('Рейс опубликован!', 'Flight published!'), t('Ожидайте заявок', 'Wait for requests')),
+
+      // Success
+      successIcon: s.successIcon, successTitle: s.successTitle, successMessage: s.successMessage,
+      closeSuccess: () => this.setState({ showSuccess: false }),
+
+      // Stop propagation for modals
+      stopProp: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+
+      // Navigation
+      goHome: () => this.setState({ screen: 'home' }),
+      goProfile: () => this.setState({ screen: 'profile' }),
+      goSettings: () => this.setState({ screen: 'settings' }),
+      goPublishFlight: () => this.setState({ screen: 'publishFlight' }),
+      goTravelersList: () => this.setState({ screen: 'travelersList' }),
+      goPartnerProfile: () => this.setState({ screen: 'profile' }),
+      goChatList: () => this.setState({ screen: 'chatList' }),
+      goTracking: () => this.setState({ screen: 'tracking' }),
+      goSubscription: () => this.setState({ screen: 'subscription' }),
+      goNotifications: () => this.setState({ screen: 'notifications' }),
+      goOnboarding: () => this.setState({ screen: 'onboarding' }),
+      openChatFromTracking: () => this.setState({ screen: 'chat' }),
+      searchTravelers: () => this.setState({ screen: 'travelersList' }),
+      openRegCity: () => this.setState({ showCityPicker: true, cityPickerTarget: 'from' }),
+      onboardSender: () => this.setState({ screen: 'registration', role: 'sender' }),
+      onboardTraveler: () => this.setState({ screen: 'registration', role: 'traveler' }),
+      skipOnboarding: () => this.setState({ screen: 'home' }),
+      completeRegistration: () => { this.setState({ screen: 'home' }); this.showSuccessModal('🎉', t('Добро пожаловать!', 'Welcome!'), t('Регистрация завершена', 'Registration complete')); },
+      uploadPassport: () => {},
+      submitRouteSuggestion: () => this.showSuccessModal('🙏', t('Спасибо!', 'Thank you!'), t('Мы рассмотрим ваше предложение', 'We will review your suggestion')),
+
+      // Translations
+      t_onboardingSub: t('Доставка посылок через попутчиков по всему миру', 'Parcel delivery via travelers worldwide'),
+      t_iWantToSend: t('Хочу отправить посылку', 'I want to send a parcel'),
+      t_iWantToSendSub: t('Найдите попутчика на ваш маршрут', 'Find a traveler on your route'),
+      t_iWantToCarry: t('Хочу перевезти посылку', 'I want to carry parcels'),
+      t_iWantToCarrySub: t('Заработайте на свободном месте в багаже', 'Earn with your free luggage space'),
+      t_alreadyHaveAccount: t('Уже есть аккаунт? Войти', 'Already have an account? Sign in'),
+      t_registration: t('Регистрация', 'Registration'),
+      t_addPhotoProfile: t('Добавить фото', 'Add photo'),
+      t_yourName: t('Ваше имя', 'Your name'),
+      t_namePlaceholder: t('Как вас зовут?', 'What is your name?'),
+      t_phone: t('Телефон', 'Phone'),
+      t_city: t('Город', 'City'),
+      t_selectCityReg: t('Выберите город', 'Select city'),
+      t_verification: t('Верификация личности', 'Identity verification'),
+      t_verificationSub: t('Для безопасности сделок', 'For transaction security'),
+      t_uploadPassport: t('Загрузить фото паспорта', 'Upload passport photo'),
+      t_register: t('Зарегистрироваться', 'Register'),
+      t_send: t('Отправить', 'Send'),
+      t_travel: t('Перевезти', 'Travel'),
+      t_route: t('Маршрут', 'Route'),
+      t_findTravelers: t('Найти попутчиков', 'Find travelers'),
+      t_popularRoutes: t('Популярные маршруты', 'Popular routes'),
+      t_activeDeliveries: t('Активные доставки', 'Active deliveries'),
+      t_travelers: t('Попутчики', 'Travelers'),
+      t_sendParcel: t('Отправить посылку', 'Send parcel'),
+      t_parcelDesc: t('Описание', 'Description'),
+      t_parcelDescPh: t('Что отправляете?', 'What are you sending?'),
+      t_weight: t('Вес', 'Weight'),
+      t_kg: t('кг', 'kg'),
+      t_size: t('Размер', 'Size'),
+      t_photo: t('Фото', 'Photo'),
+      t_addPhoto: t('Добавить фото', 'Add photo'),
+      t_yourOffer: t('Ваше предложение', 'Your offer'),
+      t_avgPrice: t('Средняя цена', 'Average price'),
+      t_sendRequest: t('Отправить заявку', 'Send request'),
+      t_publishFlight: t('Опубликовать рейс', 'Publish flight'),
+      t_publishFlightSub: t('Заработайте на свободном месте', 'Earn with your free luggage space'),
+      t_myFlights: t('Мои рейсы', 'My flights'),
+      t_incomingRequests: t('Входящие заявки', 'Incoming requests'),
+      t_decline: t('Откл.', 'Decline'),
+      t_counterOffer: t('Торг', 'Counter'),
+      t_accept: t('Принять', 'Accept'),
+      t_counterOfferSub: t('Предложите свою цену отправителю', 'Suggest your price to the sender'),
+      t_cancel: t('Отмена', 'Cancel'),
+      t_sendOffer: t('Отправить', 'Send'),
+      t_chats: t('Чаты', 'Chats'),
+      t_noChatsYet: t('Пока нет чатов', 'No chats yet'),
+      t_online: t('в сети', 'online'),
+      t_profile: t('Профиль', 'Profile'),
+      t_typeMessage: t('Сообщение...', 'Message...'),
+      t_rateDelivery: t('Оцените доставку', 'Rate the delivery'),
+      t_ratingCommentPh: t('Оставьте комментарий (необязательно)', 'Leave a comment (optional)'),
+      t_submitRating: t('Отправить оценку', 'Submit rating'),
+      t_skipRating: t('Пропустить', 'Skip'),
+      t_myParcels: t('Мои посылки', 'My parcels'),
+      t_tracking: t('Отслеживание', 'Tracking'),
+      t_courier: t('Курьер', 'Courier'),
+      t_rateNow: t('Оценить доставку', 'Rate delivery'),
+      t_rating: t('Рейтинг', 'Rating'),
+      t_deliveries: t('Доставки', 'Deliveries'),
+      t_reviews: t('Отзывы', 'Reviews'),
+      t_verified: t('Верифицирован', 'Verified'),
+      t_verifiedSub: t('Паспорт проверен', 'Passport verified'),
+      t_recentReviews: t('Отзывы', 'Reviews'),
+      t_settings: t('Настройки', 'Settings'),
+      t_language: t('Язык', 'Language'),
+      t_suggestRoute: t('Предложить маршрут', 'Suggest a route'),
+      t_suggestRoutePh: t('Например: Бишкек — Сеул', 'E.g.: Bishkek — Seoul'),
+      t_submitSuggestion: t('Отправить', 'Submit'),
+      t_notifSettings: t('Уведомления', 'Notifications'),
+      t_flightDate: t('Дата вылета', 'Flight date'),
+      t_availableKg: t('Свободное место (кг)', 'Available space (kg)'),
+      t_pricePerKg: t('Цена за кг', 'Price per kg'),
+      t_publish: t('Опубликовать', 'Publish'),
+      t_selectCity: t('Выберите город', 'Select city'),
+      t_close: t('Закрыть', 'Close'),
+      t_searchCity: t('Поиск...', 'Search...'),
+      t_subscription: t('Подписка', 'Subscription'),
+      t_trialActive: t('Пробный период: 25 дней', 'Trial: 25 days left'),
+      t_currentPlan: t('Текущий план', 'Current plan'),
+      t_trialPlan: t('Пробный период', 'Free Trial'),
+      t_trialDaysLeft: t('Осталось 25 дней', '25 days remaining'),
+      t_choosePlan: t('Выберите план', 'Choose a plan'),
+      t_popular: t('Популярный', 'Popular'),
+      t_paymentMethod: t('Метод оплаты', 'Payment method'),
+      t_notifications: t('Уведомления', 'Notifications'),
+    };
+  }
+}
+</script>
+</body>
+</html>

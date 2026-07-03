@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #0a0a0a; font-family: 'Roboto', sans-serif; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</helmet>
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box;">
+  <div style="width: 100%; max-width: 400px; height: 780px; background: #0E1621; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 40px rgba(0,0,0,0.5);">
+
+    <!-- Telegram Header -->
+    <div style="background: #17212B; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #232E3C;">
+      <div onClick="{{ goBack }}" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: #6AB2F2;">‹</div>
+      <div style="width: 40px; height: 40px; border-radius: 20px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 18px;">📦</div>
+      <div style="flex: 1;">
+        <div style="font-size: 15px; font-weight: 500; color: #fff;">Parcel Bot</div>
+        <div style="font-size: 13px; color: #6AB2F2;">{{ headerStatus }}</div>
+      </div>
+      <div style="font-size: 20px; color: #6AB2F2; cursor: pointer;">⋮</div>
+    </div>
+
+    <!-- Chat area -->
+    <div style="flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; background: #0E1621;">
+      <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="4">
+        <!-- Bot message -->
+        <sc-if value="{{ msg.isBot }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: flex-end; gap: 6px; max-width: 88%; animation: msgIn 0.2s ease;">
+            <sc-if value="{{ msg.showAvatar }}" hint-placeholder-val="{{ true }}">
+              <div style="width: 28px; height: 28px; border-radius: 14px; background: linear-gradient(135deg, #6C5CE7, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">📦</div>
+            </sc-if>
+            <sc-if value="{{ msg.hideAvatar }}" hint-placeholder-val="{{ false }}">
+              <div style="width: 28px; flex-shrink: 0;"></div>
+            </sc-if>
+            <div style="background: #182533; border-radius: 4px 12px 12px 12px; padding: 8px 12px; max-width: 100%;">
+              <div style="font-size: 13px; font-weight: 500; color: #6AB2F2; margin-bottom: 2px;">Parcel Bot</div>
+              <div style="font-size: 14px; color: #E4E6EB; line-height: 1.45; white-space: pre-wrap;">{{ msg.text }}</div>
+              <!-- Inline buttons -->
+              <sc-if value="{{ msg.hasButtons }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+                  <sc-for list="{{ msg.buttonRows }}" as="row" hint-placeholder-count="2">
+                    <div style="display: flex; gap: 4px;">
+                      <sc-for list="{{ row.buttons }}" as="btn" hint-placeholder-count="2">
+                        <div onClick="{{ btn.onTap }}" style="flex: 1; background: #2B5278; border-radius: 6px; padding: 8px; text-align: center; font-size: 13px; font-weight: 500; color: #fff; cursor: pointer; transition: all 0.15s;" style-active="opacity: 0.7;">{{ btn.label }}</div>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="font-size: 11px; color: #546778; margin-top: 4px; text-align: right;">{{ msg.time }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- User message -->
+        <sc-if value="{{ msg.isUser }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; justify-content: flex-end; animation: msgIn 0.2s ease;">
+            <div style="background: #2B5278; border-radius: 12px 12px 4px 12px; padding: 8px 12px; max-width: 78%;">
+              <div style="font-size: 14px; color: #E4E6EB; line-height: 1.45;">{{ msg.text }}</div>
+              <div style="font-size: 11px; color: #7EB8E4; margin-top: 4px; text-align: right;">{{ msg.time }} ✓✓</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- System message -->
+        <sc-if value="{{ msg.isSystem }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align: center; padding: 4px 0;">
+            <div style="display: inline-block; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px 12px; font-size: 12px; color: #546778;">{{ msg.text }}</div>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+
+    <!-- Command Menu Popup -->
+    <sc-if value="{{ showCommandMenu }}" hint-placeholder-val="{{ false }}">
+      <div style="background: #17212B; border-top: 1px solid #232E3C; padding: 6px 8px;">
+        <div style="font-size: 12px; color: #546778; margin-bottom: 4px; padding: 0 4px;">{{ t_commands }}</div>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <sc-for list="{{ commandItems }}" as="cmd" hint-placeholder-count="4">
+            <div onClick="{{ cmd.onTap }}" style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;" style-hover="background: #232E3C;">
+              <div style="font-size: 14px; color: #6AB2F2; font-weight: 500; min-width: 70px;">{{ cmd.command }}</div>
+              <div style="font-size: 13px; color: #546778;">{{ cmd.desc }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Reply Keyboard -->
+    <sc-if value="{{ showReplyKeyboard }}" hint-placeholder-val="{{ true }}">
+      <div style="background: #17212B; border-top: 1px solid #232E3C; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px;">
+        <sc-for list="{{ replyRows }}" as="rrow" hint-placeholder-count="2">
+          <div style="display: flex; gap: 4px;">
+            <sc-for list="{{ rrow.buttons }}" as="rbtn" hint-placeholder-count="2">
+              <div onClick="{{ rbtn.onTap }}" style="flex: 1; background: #2B3A4C; border-radius: 8px; padding: 10px 8px; text-align: center; font-size: 14px; color: #E4E6EB; cursor: pointer; transition: all 0.15s;" style-active="background: #3A4D63;">{{ rbtn.label }}</div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- Input area -->
+    <div style="background: #17212B; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #232E3C;">
+      <!-- Menu button -->
+      <div onClick="{{ openCommandMenu }}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: #6AB2F2; background: #242F3D; border-radius: 16px; flex-shrink: 0; font-weight: 700;">/</div>
+      <!-- Keyboard toggle -->
+      <sc-if value="{{ hasReplyKeyboard }}" hint-placeholder-val="{{ true }}">
+        <div onClick="{{ toggleKeyboard }}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6AB2F2; flex-shrink: 0;">{{ keyboardIcon }}</div>
+      </sc-if>
+      <input id="botInput" type="text" placeholder="{{ inputPlaceholder }}" style="flex: 1; background: #242F3D; border: none; border-radius: 20px; padding: 8px 14px; color: #E4E6EB; font-size: 14px; font-family: inherit; outline: none;" onkeydown="if(event.key==='Enter'){event.preventDefault();this.closest('[data-dc-tpl]')?.querySelector('[data-send-btn]')?.click();}">
+      <div onClick="{{ sendUserMsg }}" data-send-btn="" style="width: 36px; height: 36px; border-radius: 18px; background: #6C5CE7; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;">
+        <div style="color: #fff; font-size: 16px;">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 420, &quot;height&quot;: 820}, &quot;language&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;ru&quot;, &quot;en&quot;], &quot;default&quot;: &quot;ru&quot;, &quot;section&quot;: &quot;Settings&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'start',
+    prevScreen: null,
+    lang: 'ru',
+    step: 0,
+    selectedCity: null,
+    keyboardVisible: true,
+    showCommandMenu: false,
+    selectedTraveler: null, // index of selected traveler
+    userInput: '',
+  };
+
+  t(ru, en) { return this.state.lang === 'ru' ? ru : en; }
+
+  componentDidMount() {
+    const lang = this.props.language ?? 'ru';
+    this.setState({ lang });
+  }
+
+  go(screen, prevScreen) {
+    this.setState({ screen, prevScreen: prevScreen || this.state.screen, step: 0 });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const t = this.t.bind(this);
+    const messages = [];
+    let replyRows = [];
+    let showReplyKeyboard = false;
+    let headerStatus = 'bot';
+    let inputPlaceholder = t('Сообщение...', 'Message...');
+
+    const time = () => {
+      const times = ['14:20', '14:21', '14:22', '14:23', '14:24', '14:25', '14:26', '14:27', '14:28', '14:29', '14:30'];
+      return times[Math.floor(Math.random() * times.length)];
+    };
+
+    const mkBtn = (label, onTap) => ({ label, onTap });
+    const mkRow = (...buttons) => ({ buttons });
+
+    // ============ /start ============
+    if (s.screen === 'start') {
+      headerStatus = t('бот', 'bot');
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '👋 Добро пожаловать в Parcel Bot!\n\n📦 Сервис доставки посылок через попутчиков.\n\nВыберите вашу роль:',
+          '👋 Welcome to Parcel Bot!\n\n📦 Parcel delivery service via travelers.\n\nChoose your role:'
+        ),
+        time: '14:20',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('📦 ' + t('Отправить посылку', 'Send a parcel'), () => this.go('senderMenu')), mkBtn('✈️ ' + t('Перевезти посылку', 'Carry parcels'), () => this.go('travelerMenu'))),
+          mkRow(mkBtn('🌐 ' + t('Язык / Language', 'Language / Язык'), () => this.go('settings'))),
+        ]
+      });
+    }
+
+    // ============ SENDER MENU ============
+    if (s.screen === 'senderMenu') {
+      headerStatus = t('бот', 'bot');
+      showReplyKeyboard = true;
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '📦 Меню отправителя\n\nВы можете найти попутчика и отправить посылку на любом направлении.',
+          '📦 Sender Menu\n\nYou can find a traveler and send a parcel on any route.'
+        ),
+        time: '14:21',
+        hasButtons: false, buttonRows: []
+      });
+      replyRows = [
+        mkRow(mkBtn('📦 ' + t('Отправить посылку', 'Send parcel'), () => this.go('createParcel')), mkBtn('🔍 ' + t('Найти попутчика', 'Find traveler'), () => this.go('travelerList'))),
+        mkRow(mkBtn('📋 ' + t('Мои посылки', 'My parcels'), () => this.go('myParcels')), mkBtn('💬 ' + t('Мои чаты', 'My chats'), () => this.go('chatList'))),
+        mkRow(mkBtn('👤 ' + t('Профиль', 'Profile'), () => this.go('profile')), mkBtn('⚙️ ' + t('Настройки', 'Settings'), () => this.go('settings'))),
+      ];
+    }
+
+    // ============ TRAVELER MENU ============
+    if (s.screen === 'travelerMenu') {
+      headerStatus = t('бот', 'bot');
+      showReplyKeyboard = true;
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '✈️ Меню перевозчика\n\nПубликуйте свои рейсы и зарабатывайте на свободном месте в багаже.',
+          '✈️ Traveler Menu\n\nPublish your flights and earn with free luggage space.'
+        ),
+        time: '14:21',
+        hasButtons: false, buttonRows: []
+      });
+      replyRows = [
+        mkRow(mkBtn('✈️ ' + t('Опубликовать рейс', 'Publish flight'), () => this.go('publishFlight')), mkBtn('📬 ' + t('Входящие заявки', 'Requests'), () => this.go('requests'))),
+        mkRow(mkBtn('📋 ' + t('Мои рейсы', 'My flights'), () => this.go('myFlights')), mkBtn('💬 ' + t('Мои чаты', 'My chats'), () => this.go('chatList'))),
+        mkRow(mkBtn('👤 ' + t('Профиль', 'Profile'), () => this.go('profile')), mkBtn('⭐ ' + t('Подписка', 'Subscription'), () => this.go('subscription'))),
+        mkRow(mkBtn('⚙️ ' + t('Настройки', 'Settings'), () => this.go('settings'))),
+      ];
+    }
+
+    // ============ CREATE PARCEL (FSM) ============
+    if (s.screen === 'createParcel') {
+      headerStatus = t('бот', 'bot');
+      if (s.step === 0) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '📦 ' + t('Отправить посылку', 'Send parcel'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📍 Выберите маршрут:\n\nОткуда отправляете?', '📍 Select route:\n\nWhere are you sending from?'),
+          time: '14:22',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🇦🇪 ' + t('Дубай', 'Dubai'), () => this.setState({ step: 1 })), mkBtn('🇰🇿 ' + t('Алматы', 'Almaty'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('🇷🇺 ' + t('Москва', 'Moscow'), () => this.setState({ step: 1 })), mkBtn('🇺🇸 ' + t('Нью-Йорк', 'New York'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('🇹🇷 ' + t('Стамбул', 'Istanbul'), () => this.setState({ step: 1 })), mkBtn('🇰🇿 ' + t('Астана', 'Astana'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('✏️ ' + t('Другой город', 'Other city'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('senderMenu'))),
+          ]
+        });
+      } else if (s.step === 1) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '🇦🇪 ' + t('Дубай', 'Dubai'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📍 Куда доставить?', '📍 Where to deliver?'),
+          time: '14:22',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🇰🇿 ' + t('Алматы', 'Almaty'), () => this.setState({ step: 2 })), mkBtn('🇷🇺 ' + t('Москва', 'Moscow'), () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('🇺🇸 ' + t('Нью-Йорк', 'New York'), () => this.setState({ step: 2 })), mkBtn('🇹🇷 ' + t('Стамбул', 'Istanbul'), () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('✏️ ' + t('Другой город', 'Other city'), () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 0 }))),
+          ]
+        });
+      } else if (s.step === 2) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '🇰🇿 ' + t('Алматы', 'Almaty'), time: '14:23', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📝 Опишите посылку:\n\nЧто отправляете? (текст)', '📝 Describe the parcel:\n\nWhat are you sending? (text)'),
+          time: '14:23',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 1 }))),
+          ]
+        });
+        inputPlaceholder = t('Опишите содержимое...', 'Describe contents...');
+      } else if (s.step === 3) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: t('Документы и электроника, подарки для семьи', 'Documents and electronics, gifts for family'), time: '14:24', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('⚖️ Укажите вес посылки:', '⚖️ Specify parcel weight:'),
+          time: '14:24',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('1 ' + t('кг', 'kg'), () => this.setState({ step: 4 })), mkBtn('2 ' + t('кг', 'kg'), () => this.setState({ step: 4 })), mkBtn('3 ' + t('кг', 'kg'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('5 ' + t('кг', 'kg'), () => this.setState({ step: 4 })), mkBtn('10 ' + t('кг', 'kg'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('✏️ ' + t('Другое', 'Other'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 2 }))),
+          ]
+        });
+      } else if (s.step === 4) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '3 ' + t('кг', 'kg'), time: '14:24', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📷 Отправьте фото посылки (или нажмите "Пропустить"):', '📷 Send a photo of the parcel (or press "Skip"):'),
+          time: '14:24',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('⏭ ' + t('Пропустить', 'Skip'), () => this.setState({ step: 5 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 3 }))),
+          ]
+        });
+      } else if (s.step === 5) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '⏭ ' + t('Пропустить', 'Skip'), time: '14:25', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('💰 Укажите вашу цену ($ USD):\n\nСредняя цена на маршруте Дубай → Алматы: $8-12/кг', '💰 Set your price ($ USD):\n\nAverage price on Dubai → Almaty route: $8-12/kg'),
+          time: '14:25',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('$15', () => this.setState({ step: 6 })), mkBtn('$20', () => this.setState({ step: 6 })), mkBtn('$30', () => this.setState({ step: 6 }))),
+            mkRow(mkBtn('$50', () => this.setState({ step: 6 })), mkBtn('✏️ ' + t('Другое', 'Other'), () => this.setState({ step: 6 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 4 }))),
+          ]
+        });
+      } else if (s.step === 6) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '$30', time: '14:25', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '✅ Проверьте заявку:\n\n📍 Маршрут: Дубай → Алматы\n📝 Описание: Документы и электроника\n⚖️ Вес: 3 кг\n📷 Фото: нет\n💰 Цена: $30\n\nВсё верно?',
+            '✅ Review your request:\n\n📍 Route: Dubai → Almaty\n📝 Description: Documents and electronics\n⚖️ Weight: 3 kg\n📷 Photo: none\n💰 Price: $30\n\nIs everything correct?'
+          ),
+          time: '14:25',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('✅ ' + t('Подтвердить', 'Confirm'), () => this.setState({ step: 7 })), mkBtn('✏️ ' + t('Изменить', 'Edit'), () => this.setState({ step: 0 }))),
+            mkRow(mkBtn('❌ ' + t('Отменить', 'Cancel'), () => this.go('senderMenu'))),
+          ]
+        });
+      } else if (s.step === 7) {
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '🎉 Заявка создана!\n\n📦 Дубай → Алматы | 3 кг | $30\n\n🔍 Ищем попутчиков на ваш маршрут...\nВам придёт уведомление когда кто-то откликнется.',
+            '🎉 Request created!\n\n📦 Dubai → Almaty | 3 kg | $30\n\n🔍 Looking for travelers on your route...\nYou\'ll get a notification when someone responds.'
+          ),
+          time: '14:26',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('📋 ' + t('Мои посылки', 'My parcels'), () => this.go('myParcels')), mkBtn('🏠 ' + t('Меню', 'Menu'), () => this.go('senderMenu'))),
+          ]
+        });
+      }
+    }
+
+    // ============ PUBLISH FLIGHT (FSM) ============
+    if (s.screen === 'publishFlight') {
+      if (s.step === 0) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '✈️ ' + t('Опубликовать рейс', 'Publish flight'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('✈️ Публикация рейса\n\n📍 Откуда вылетаете?', '✈️ Publish flight\n\n📍 Where are you flying from?'),
+          time: '14:22',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🇦🇪 ' + t('Дубай', 'Dubai'), () => this.setState({ step: 1 })), mkBtn('🇰🇿 ' + t('Алматы', 'Almaty'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('🇷🇺 ' + t('Москва', 'Moscow'), () => this.setState({ step: 1 })), mkBtn('🇺🇸 ' + t('Нью-Йорк', 'New York'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('✏️ ' + t('Другой', 'Other'), () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('travelerMenu'))),
+          ]
+        });
+      } else if (s.step === 1) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '🇰🇿 ' + t('Алматы', 'Almaty'), time: '14:23', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📍 Куда летите?', '📍 Where are you flying to?'),
+          time: '14:23',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🇦🇪 ' + t('Дубай', 'Dubai'), () => this.setState({ step: 2 })), mkBtn('🇷🇺 ' + t('Москва', 'Moscow'), () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('✏️ ' + t('Другой', 'Other'), () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 0 }))),
+          ]
+        });
+      } else if (s.step === 2) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '🇦🇪 ' + t('Дубай', 'Dubai'), time: '14:23', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📅 Укажите дату вылета (ДД.ММ.ГГГГ):', '📅 Enter departure date (DD.MM.YYYY):'),
+          time: '14:23',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 1 }))),
+          ]
+        });
+        inputPlaceholder = t('Дата: ДД.ММ.ГГГГ', 'Date: DD.MM.YYYY');
+      } else if (s.step === 3) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '10.07.2026', time: '14:24', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('⚖️ Сколько кг свободно в багаже?', '⚖️ How many kg free in luggage?'),
+          time: '14:24',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('3 ' + t('кг', 'kg'), () => this.setState({ step: 4 })), mkBtn('5 ' + t('кг', 'kg'), () => this.setState({ step: 4 })), mkBtn('10 ' + t('кг', 'kg'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('15 ' + t('кг', 'kg'), () => this.setState({ step: 4 })), mkBtn('20 ' + t('кг', 'kg'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('✏️ ' + t('Другое', 'Other'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 2 }))),
+          ]
+        });
+      } else if (s.step === 4) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '10 ' + t('кг', 'kg'), time: '14:24', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('💰 Ориентир цены за кг ($):', '💰 Approximate price per kg ($):'),
+          time: '14:24',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('$5', () => this.setState({ step: 5 })), mkBtn('$8', () => this.setState({ step: 5 })), mkBtn('$10', () => this.setState({ step: 5 }))),
+            mkRow(mkBtn('$15', () => this.setState({ step: 5 })), mkBtn('✏️ ' + t('Другое', 'Other'), () => this.setState({ step: 5 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 3 }))),
+          ]
+        });
+      } else if (s.step === 5) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '$10', time: '14:25', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '✅ Проверьте рейс:\n\n✈️ Маршрут: Алматы → Дубай\n📅 Дата: 10.07.2026\n⚖️ Свободно: 10 кг\n💰 Цена: ~$10/кг\n\nОпубликовать?',
+            '✅ Review flight:\n\n✈️ Route: Almaty → Dubai\n📅 Date: 10.07.2026\n⚖️ Available: 10 kg\n💰 Price: ~$10/kg\n\nPublish?'
+          ),
+          time: '14:25',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('✅ ' + t('Опубликовать', 'Publish'), () => this.setState({ step: 6 })), mkBtn('✏️ ' + t('Изменить', 'Edit'), () => this.setState({ step: 0 }))),
+            mkRow(mkBtn('❌ ' + t('Отменить', 'Cancel'), () => this.go('travelerMenu'))),
+          ]
+        });
+      } else if (s.step === 6) {
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '🎉 Рейс опубликован!\n\n✈️ Алматы → Дубай | 10.07 | 10 кг\n\nЗаявки от отправителей будут приходить вам в уведомлениях.',
+            '🎉 Flight published!\n\n✈️ Almaty → Dubai | Jul 10 | 10 kg\n\nRequests from senders will come as notifications.'
+          ),
+          time: '14:26',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('📋 ' + t('Мои рейсы', 'My flights'), () => this.go('myFlights')), mkBtn('🏠 ' + t('Меню', 'Menu'), () => this.go('travelerMenu'))),
+          ]
+        });
+      }
+    }
+
+    // ============ TRAVELER LIST ============
+    if (s.screen === 'travelerList') {
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '🔍 ' + t('Найти попутчика', 'Find traveler'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '🔍 Попутчики: Дубай → Алматы\n\n' +
+          '1️⃣ Алексей К. ✓\n⭐ 4.9 · 23 поездки\n✈️ FlyDubai FZ982 · 5 июля\n⚖️ 5 кг · ~$10/кг\n\n' +
+          '2️⃣ Тимур Н. ✓\n⭐ 5.0 · 47 поездок\n✈️ Emirates EK132 · 6 июля\n⚖️ 10 кг · ~$8/кг\n\n' +
+          '3️⃣ Мария С. ✓\n⭐ 4.7 · 11 поездок\n✈️ Air Astana KC872 · 7 июля\n⚖️ 3 кг · ~$12/кг',
+          '🔍 Travelers: Dubai → Almaty\n\n' +
+          '1️⃣ Alexey K. ✓\n⭐ 4.9 · 23 trips\n✈️ FlyDubai FZ982 · Jul 5\n⚖️ 5 kg · ~$10/kg\n\n' +
+          '2️⃣ Timur N. ✓\n⭐ 5.0 · 47 trips\n✈️ Emirates EK132 · Jul 6\n⚖️ 10 kg · ~$8/kg\n\n' +
+          '3️⃣ Maria S. ✓\n⭐ 4.7 · 11 trips\n✈️ Air Astana KC872 · Jul 7\n⚖️ 3 kg · ~$12/kg'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('👤 ' + t('Алексей К.', 'Alexey K.'), () => this.setState({ screen: 'viewProfile', selectedTraveler: 0, prevScreen: 'travelerList', step: 0 })), mkBtn('👤 ' + t('Тимур Н.', 'Timur N.'), () => this.setState({ screen: 'viewProfile', selectedTraveler: 1, prevScreen: 'travelerList', step: 0 }))),
+          mkRow(mkBtn('👤 ' + t('Мария С.', 'Maria S.'), () => this.setState({ screen: 'viewProfile', selectedTraveler: 2, prevScreen: 'travelerList', step: 0 }))),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('senderMenu'))),
+        ]
+      });
+    }
+
+    // ============ INCOMING REQUESTS (traveler) ============
+    if (s.screen === 'requests') {
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '📬 ' + t('Входящие заявки', 'Requests'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '📬 Входящие заявки (2)\n\nРейс: Алматы → Дубай · 10.07\n\n──────────────\n\n1️⃣ Олег М. ⭐ 4.8\n📦 Электроника, подарки\n⚖️ 3 кг · 💰 $30\n\n2️⃣ Анна С. ⭐ 4.6\n📦 Документы, книги\n⚖️ 1.5 кг · 💰 $15',
+          '📬 Incoming requests (2)\n\nFlight: Almaty → Dubai · Jul 10\n\n──────────────\n\n1️⃣ Oleg M. ⭐ 4.8\n📦 Electronics, gifts\n⚖️ 3 kg · 💰 $30\n\n2️⃣ Anna S. ⭐ 4.6\n📦 Documents, books\n⚖️ 1.5 kg · 💰 $15'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('✅ ' + t('Принять 1', 'Accept 1'), () => this.go('chat')), mkBtn('💰 ' + t('Торг 1', 'Counter 1'), () => this.setState({ step: 1 })), mkBtn('❌ 1', () => this.go('requests'))),
+          mkRow(mkBtn('✅ ' + t('Принять 2', 'Accept 2'), () => this.go('chat')), mkBtn('💰 ' + t('Торг 2', 'Counter 2'), () => this.setState({ step: 1 })), mkBtn('❌ 2', () => this.go('requests'))),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('travelerMenu'))),
+        ]
+      });
+      if (s.step === 1) {
+        messages.push({
+          isBot: true, showAvatar: false, hideAvatar: true, isUser: false, isSystem: false,
+          text: t('💰 Укажите вашу цену ($):', '💰 Enter your price ($):'),
+          time: '14:23',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('$20', () => this.setState({ step: 2 })), mkBtn('$25', () => this.setState({ step: 2 })), mkBtn('$35', () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('✏️ ' + t('Другое', 'Other'), () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 0 }))),
+          ]
+        });
+      }
+      if (s.step === 2) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '$25', time: '14:23', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('✅ Контр-предложение $25 отправлено Олегу М.!\n\nОжидайте ответа.', '✅ Counter-offer $25 sent to Oleg M.!\n\nWaiting for response.'),
+          time: '14:23',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🏠 ' + t('Меню', 'Menu'), () => this.go('travelerMenu'))),
+          ]
+        });
+      }
+    }
+
+    // ============ RELAY CHAT ============
+    if (s.screen === 'chat') {
+      headerStatus = t('relay-чат', 'relay chat');
+      messages.push({ isSystem: true, isBot: false, isUser: false, text: t('🔒 Конфиденциальный чат · Заявка #1247', '🔒 Private chat · Request #1247'), time: '', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '🤝 Чат с Олег М.\n📦 Дубай → Алматы · 3 кг · $30\n\n⚠️ Контакты скрыты для безопасности. Общайтесь через бота.',
+          '🤝 Chat with Oleg M.\n📦 Dubai → Almaty · 3 kg · $30\n\n⚠️ Contacts hidden for safety. Communicate via bot.'
+        ),
+        time: '14:24',
+        hasButtons: false, buttonRows: []
+      });
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: t('Здравствуйте! Могу взять вашу посылку. Когда удобно встретиться?', 'Hello! I can take your parcel. When can we meet?'), time: '14:25', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t('💬 Олег М.:\nОтлично! Давайте завтра в 10:00 у Дубай Молл?', '💬 Oleg M.:\nGreat! How about tomorrow at 10:00 at Dubai Mall?'),
+        time: '14:26',
+        hasButtons: false, buttonRows: []
+      });
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: t('Договорились! До завтра 👍', 'Deal! See you tomorrow 👍'), time: '14:27', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t('💬 Олег М.:\nСпасибо! До встречи!', '💬 Oleg M.:\nThanks! See you!'),
+        time: '14:28',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('📦 ' + t('Посылка передана', 'Parcel handed'), () => this.go('rating')), mkBtn('❌ ' + t('Завершить чат', 'End chat'), () => this.go('senderMenu'))),
+        ]
+      });
+      inputPlaceholder = t('Сообщение (relay)...', 'Message (relay)...');
+    }
+
+    // ============ MY PARCELS ============
+    if (s.screen === 'myParcels') {
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '📋 ' + t('Мои посылки', 'My parcels'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '📋 Ваши посылки:\n\n1️⃣ 🟡 В пути\n📦 Дубай → Алматы · 2 кг\n👤 Тимур Н. ⭐ 5.0\n💰 $28\n\n2️⃣ ✅ Доставлена\n📦 Москва → Дубай · 3 кг\n👤 Алексей К. ⭐ 4.9\n💰 $35',
+          '📋 Your parcels:\n\n1️⃣ 🟡 In transit\n📦 Dubai → Almaty · 2 kg\n👤 Timur N. ⭐ 5.0\n💰 $28\n\n2️⃣ ✅ Delivered\n📦 Moscow → Dubai · 3 kg\n👤 Alexey K. ⭐ 4.9\n💰 $35'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('💬 ' + t('Чат #1', 'Chat #1'), () => this.go('chat')), mkBtn('⭐ ' + t('Оценить #2', 'Rate #2'), () => this.go('rating'))),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('senderMenu'))),
+        ]
+      });
+    }
+
+    // ============ MY FLIGHTS ============
+    if (s.screen === 'myFlights') {
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '📋 ' + t('Мои рейсы', 'My flights'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '📋 Ваши рейсы:\n\n1️⃣ ✈️ Алматы → Дубай\n📅 10 июля · ⚖️ 8 кг · 📬 3 заявки\n\n2️⃣ ✈️ Дубай → Москва\n📅 15 июля · ⚖️ 12 кг · 📬 7 заявок',
+          '📋 Your flights:\n\n1️⃣ ✈️ Almaty → Dubai\n📅 Jul 10 · ⚖️ 8 kg · 📬 3 requests\n\n2️⃣ ✈️ Dubai → Moscow\n📅 Jul 15 · ⚖️ 12 kg · 📬 7 requests'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('📬 ' + t('Заявки #1', 'Requests #1'), () => this.go('requests')), mkBtn('📬 ' + t('Заявки #2', 'Requests #2'), () => this.go('requests'))),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('travelerMenu'))),
+        ]
+      });
+    }
+
+    // ============ CHAT LIST ============
+    if (s.screen === 'chatList') {
+      const prev = s.prevScreen === 'travelerMenu' ? 'travelerMenu' : 'senderMenu';
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '💬 ' + t('Мои чаты', 'My chats'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '💬 Активные чаты:\n\n1️⃣ Тимур Н. · 🟢 в сети\n📦 Дубай → Алматы · 2 новых\n\n2️⃣ Мария С.\n📦 Дубай → Москва\n\n3️⃣ Алексей К.\n📦 Москва → Дубай · ✅ завершён',
+          '💬 Active chats:\n\n1️⃣ Timur N. · 🟢 online\n📦 Dubai → Almaty · 2 new\n\n2️⃣ Maria S.\n📦 Dubai → Moscow\n\n3️⃣ Alexey K.\n📦 Moscow → Dubai · ✅ ended'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('1️⃣ ' + t('Тимур', 'Timur'), () => this.go('chat')), mkBtn('2️⃣ ' + t('Мария', 'Maria'), () => this.go('chat'))),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go(prev))),
+        ]
+      });
+    }
+
+    // ============ RATING ============
+    if (s.screen === 'rating') {
+      if (s.step === 0) {
+        messages.push({ isSystem: true, isBot: false, isUser: false, text: t('📦 Посылка доставлена!', '📦 Parcel delivered!'), time: '', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '⭐ Оцените доставку!\n\n📦 Дубай → Алматы\n👤 Тимур Н.\n\nПоставьте оценку от 1 до 5:',
+            '⭐ Rate the delivery!\n\n📦 Dubai → Almaty\n👤 Timur N.\n\nRate from 1 to 5:'
+          ),
+          time: '14:30',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('1 ⭐', () => this.setState({ step: 1 })), mkBtn('2 ⭐', () => this.setState({ step: 1 })), mkBtn('3 ⭐', () => this.setState({ step: 1 })), mkBtn('4 ⭐', () => this.setState({ step: 1 })), mkBtn('5 ⭐', () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('⏭ ' + t('Пропустить', 'Skip'), () => this.go('senderMenu'))),
+          ]
+        });
+      } else if (s.step === 1) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '5 ⭐', time: '14:30', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('📝 Оставьте комментарий (или нажмите "Пропустить"):', '📝 Leave a comment (or press "Skip"):'),
+          time: '14:30',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('⏭ ' + t('Пропустить', 'Skip'), () => this.setState({ step: 2 }))),
+          ]
+        });
+        inputPlaceholder = t('Ваш отзыв...', 'Your review...');
+      } else if (s.step === 2) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: t('Отличный человек! Всё доставил вовремя 👍', 'Great person! Delivered on time 👍'), time: '14:31', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t('✅ Спасибо за оценку!\n\nВы поставили 5 ⭐ Тимуру Н.\n💬 Комментарий сохранён.', '✅ Thanks for the rating!\n\nYou gave 5 ⭐ to Timur N.\n💬 Comment saved.'),
+          time: '14:31',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🏠 ' + t('Меню', 'Menu'), () => this.go('senderMenu'))),
+          ]
+        });
+      }
+    }
+
+    // ============ PROFILE ============
+    if (s.screen === 'profile') {
+      const prev = s.prevScreen === 'travelerMenu' ? 'travelerMenu' : 'senderMenu';
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '👤 ' + t('Профиль', 'Profile'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '👤 Ваш профиль\n\n📛 Андрей\n📱 +7 (***) ***-**-34\n🌍 Дубай\n🛡️ Верифицирован ✓\n\n📊 Статистика:\n⭐ Рейтинг: 4.9\n📦 Доставок: 34\n💬 Отзывов: 28\n📅 С марта 2026\n\n──────────────\n\n💬 Последние отзывы:\n\n⭐⭐⭐⭐⭐ Олег М.\n«Отличный человек! Вовремя и в целости.»\n\n⭐⭐⭐⭐⭐ Светлана К.\n«Надёжный курьер, рекомендую!»',
+          '👤 Your profile\n\n📛 Andrey\n📱 +7 (***) ***-**-34\n🌍 Dubai\n🛡️ Verified ✓\n\n📊 Stats:\n⭐ Rating: 4.9\n📦 Deliveries: 34\n💬 Reviews: 28\n📅 Since March 2026\n\n──────────────\n\n💬 Recent reviews:\n\n⭐⭐⭐⭐⭐ Oleg M.\n"Great person! On time and intact."\n\n⭐⭐⭐⭐⭐ Svetlana K.\n"Reliable courier, recommend!"'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('✏️ ' + t('Изменить имя', 'Edit name'), () => {}), mkBtn('📱 ' + t('Изм. телефон', 'Edit phone'), () => {})),
+          mkRow(mkBtn('🛡️ ' + t('Верификация', 'Verification'), () => {})),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go(prev))),
+        ]
+      });
+    }
+
+    // ============ VIEW PROFILE (other user) ============
+    if (s.screen === 'viewProfile') {
+      const travelers = [
+        { name: t('Алексей К.', 'Alexey K.'), rating: '4.9', trips: t('23 поездки', '23 trips'), since: t('марта 2026', 'March 2026'), kg: '5', price: '$10' },
+        { name: t('Тимур Н.', 'Timur N.'), rating: '5.0', trips: t('47 поездок', '47 trips'), since: t('января 2026', 'January 2026'), kg: '10', price: '$8' },
+        { name: t('Мария С.', 'Maria S.'), rating: '4.7', trips: t('11 поездок', '11 trips'), since: t('мая 2026', 'May 2026'), kg: '3', price: '$12' },
+      ];
+      const tr = travelers[s.selectedTraveler || 0];
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '👤 Профиль: ' + tr.name + '\n\n🛡️ Верифицирован ✓\n⭐ Рейтинг: ' + tr.rating + '\n✈️ ' + tr.trips + '\n⚖️ Свободно: ' + tr.kg + ' кг · ~' + tr.price + '/кг\n📅 С ' + tr.since + '\n\n──────────────\n\n💬 Отзывы:\n\n⭐⭐⭐⭐⭐ Олег М.\n«Супер! Всё без проблем»\n\n⭐⭐⭐⭐⭐ Анна С.\n«Очень надёжный, рекомендую»\n\n⭐⭐⭐⭐ Дмитрий П.\n«Хорошо, но чуть опоздал»',
+          '👤 Profile: ' + tr.name + '\n\n🛡️ Verified ✓\n⭐ Rating: ' + tr.rating + '\n✈️ ' + tr.trips + '\n⚖️ Available: ' + tr.kg + ' kg · ~' + tr.price + '/kg\n📅 Since ' + tr.since + '\n\n──────────────\n\n💬 Reviews:\n\n⭐⭐⭐⭐⭐ Oleg M.\n"Super! No issues"\n\n⭐⭐⭐⭐⭐ Anna S.\n"Very reliable, recommend"\n\n⭐⭐⭐⭐ Dmitry P.\n"Good, but a bit late"'
+        ),
+        time: '14:23',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('📦 ' + t('Отправить посылку', 'Send parcel'), () => this.go('createParcel'))),
+          mkRow(mkBtn('💬 ' + t('Написать', 'Message'), () => this.go('chat'))),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go(s.prevScreen || 'travelerList'))),
+        ]
+      });
+    }
+
+    // ============ SUBSCRIPTION ============
+    if (s.screen === 'subscription') {
+      if (s.step === 0) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '⭐ ' + t('Подписка', 'Subscription'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '⭐ Подписка перевозчика\n\n📌 Текущий план: Пробный период\n⏳ Осталось: 25 дней\n\n💡 Подписка нужна для получения заявок.\n\nВыберите план:',
+            '⭐ Traveler Subscription\n\n📌 Current plan: Free Trial\n⏳ Remaining: 25 days\n\n💡 Subscription is needed to receive requests.\n\nChoose a plan:'
+          ),
+          time: '14:22',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('1 ' + t('мес', 'mo') + ' — $40', () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('3 ' + t('мес', 'mo') + ' — $100 (-17%)', () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('12 ' + t('мес', 'mo') + ' — $300 (-38%)', () => this.setState({ step: 1 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go('travelerMenu'))),
+          ]
+        });
+      } else if (s.step === 1) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '3 ' + t('мес', 'mo') + ' — $100', time: '14:23', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '💳 Оплата: 3 месяца — $100\n\nВыберите способ оплаты:',
+            '💳 Payment: 3 months — $100\n\nChoose payment method:'
+          ),
+          time: '14:23',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('⭐ Telegram Stars (7,000 ⭐)', () => this.setState({ step: 2 }))),
+            mkRow(mkBtn('💎 TON (31 TON)', () => this.setState({ step: 3 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 0 }))),
+          ]
+        });
+      } else if (s.step === 2) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '⭐ Telegram Stars', time: '14:24', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '⭐ Оплата Telegram Stars\n\n📌 План: 3 месяца\n💰 Сумма: 7,000 ⭐\n\nНажмите кнопку для оплаты через Telegram:',
+            '⭐ Telegram Stars Payment\n\n📌 Plan: 3 months\n💰 Amount: 7,000 ⭐\n\nPress the button to pay via Telegram:'
+          ),
+          time: '14:24',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('⭐ ' + t('Оплатить 7,000 Stars', 'Pay 7,000 Stars'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 1 }))),
+          ]
+        });
+      } else if (s.step === 3) {
+        messages.push({ isUser: true, isBot: false, isSystem: false, text: '💎 TON', time: '14:24', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '💎 Оплата TON\n\n📌 План: 3 месяца\n💰 Сумма: 31 TON\n\n📋 Адрес кошелька:\n`UQBx...7kPa`\n\n📋 MEMO: PB-48291\n\n⚠️ Отправьте ТОЧНУЮ сумму с указанным MEMO!\nПодписка активируется автоматически (1-3 мин).',
+            '💎 TON Payment\n\n📌 Plan: 3 months\n💰 Amount: 31 TON\n\n📋 Wallet:\n`UQBx...7kPa`\n\n📋 MEMO: PB-48291\n\n⚠️ Send the EXACT amount with the MEMO!\nSubscription activates automatically (1-3 min).'
+          ),
+          time: '14:24',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('📋 ' + t('Копировать адрес', 'Copy address'), () => {}), mkBtn('📋 MEMO', () => {})),
+            mkRow(mkBtn('✅ ' + t('Я оплатил', 'I paid'), () => this.setState({ step: 4 }))),
+            mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.setState({ step: 1 }))),
+          ]
+        });
+      } else if (s.step === 4) {
+        messages.push({
+          isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+          text: t(
+            '✅ Подписка активирована!\n\n📌 План: 3 месяца\n📅 До: 03.10.2026\n\nСпасибо! Теперь вы будете получать все заявки.',
+            '✅ Subscription activated!\n\n📌 Plan: 3 months\n📅 Until: Oct 3, 2026\n\nThank you! You will now receive all requests.'
+          ),
+          time: '14:25',
+          hasButtons: true,
+          buttonRows: [
+            mkRow(mkBtn('🏠 ' + t('Меню', 'Menu'), () => this.go('travelerMenu'))),
+          ]
+        });
+      }
+    }
+
+    // ============ SETTINGS ============
+    if (s.screen === 'settings') {
+      const prev = s.prevScreen || 'start';
+      messages.push({ isUser: true, isBot: false, isSystem: false, text: '⚙️ ' + t('Настройки', 'Settings'), time: '14:22', hasButtons: false, buttonRows: [], showAvatar: false, hideAvatar: false });
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t(
+          '⚙️ Настройки\n\n🌐 Язык: Русский\n🔔 Уведомления: включены\n\nВыберите действие:',
+          '⚙️ Settings\n\n🌐 Language: English\n🔔 Notifications: enabled\n\nChoose action:'
+        ),
+        time: '14:22',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('🇷🇺 Русский', () => this.setState({ lang: 'ru' })), mkBtn('🇬🇧 English', () => this.setState({ lang: 'en' }))),
+          mkRow(mkBtn('🔔 ' + t('Уведомления', 'Notifications'), () => {})),
+          mkRow(mkBtn('📍 ' + t('Предложить маршрут', 'Suggest route'), () => {})),
+          mkRow(mkBtn('🔙 ' + t('Назад', 'Back'), () => this.go(prev))),
+        ]
+      });
+    }
+
+    // Command menu - remove the inline version, use popup instead
+    if (false && s.showCommandMenu) {
+      messages.push({
+        isBot: true, showAvatar: true, hideAvatar: false, isUser: false, isSystem: false,
+        text: t('📋 Команды бота:', '📋 Bot commands:'),
+        time: '',
+        hasButtons: true,
+        buttonRows: [
+          mkRow(mkBtn('/start', () => this.setState({ screen: 'start', showCommandMenu: false, step: 0 })), mkBtn('/menu', () => this.setState({ screen: 'senderMenu', showCommandMenu: false, step: 0 }))),
+          mkRow(mkBtn('/send', () => this.setState({ screen: 'createParcel', showCommandMenu: false, step: 0 })), mkBtn('/flights', () => this.setState({ screen: 'publishFlight', showCommandMenu: false, step: 0 }))),
+          mkRow(mkBtn('/profile', () => this.setState({ screen: 'profile', showCommandMenu: false, step: 0 })), mkBtn('/settings', () => this.setState({ screen: 'settings', showCommandMenu: false, step: 0 }))),
+          mkRow(mkBtn('/help', () => this.setState({ showCommandMenu: false }))),
+        ]
+      });
+    }
+
+    return {
+      messages,
+      showReplyKeyboard: showReplyKeyboard && s.keyboardVisible,
+      replyRows,
+      headerStatus,
+      inputPlaceholder,
+      hasReplyKeyboard: showReplyKeyboard,
+      keyboardIcon: s.keyboardVisible ? '▼' : '▤',
+      showCommandMenu: s.showCommandMenu,
+      t_commands: t('Команды', 'Commands'),
+      commandItems: [
+        { command: '/start', desc: t('Начало', 'Start'), onTap: () => this.setState({ screen: 'start', showCommandMenu: false, step: 0 }) },
+        { command: '/menu', desc: t('Главное меню', 'Main menu'), onTap: () => this.setState({ screen: 'senderMenu', showCommandMenu: false, step: 0 }) },
+        { command: '/send', desc: t('Отправить посылку', 'Send parcel'), onTap: () => this.setState({ screen: 'createParcel', showCommandMenu: false, step: 0 }) },
+        { command: '/profile', desc: t('Мой профиль', 'My profile'), onTap: () => this.setState({ screen: 'profile', showCommandMenu: false, step: 0 }) },
+        { command: '/settings', desc: t('Настройки', 'Settings'), onTap: () => this.setState({ screen: 'settings', showCommandMenu: false, step: 0 }) },
+      ],
+      toggleKeyboard: () => this.setState(p => ({ keyboardVisible: !p.keyboardVisible })),
+      openCommandMenu: () => this.setState(p => ({ showCommandMenu: !p.showCommandMenu })),
+      goBack: () => {
+        const prev = s.prevScreen || 'start';
+        this.go(prev);
+      },
+      sendUserMsg: () => {
+        // Get text from input
+        const input = document.getElementById('botInput');
+        const text = input ? input.value.trim() : '';
+
+        // Handle / commands
+        if (text.startsWith('/')) {
+          const cmd = text.toLowerCase();
+          if (input) input.value = '';
+          if (cmd === '/start') { this.go('start'); return; }
+          if (cmd === '/menu') { this.go('senderMenu'); return; }
+          if (cmd === '/send') { this.go('createParcel'); return; }
+          if (cmd === '/profile') { this.go('profile'); return; }
+          if (cmd === '/settings') { this.go('settings'); return; }
+          return;
+        }
+
+        // Advance FSM with text input
+        if (s.screen === 'createParcel' && s.step === 2) { if (input) input.value = ''; this.setState({ step: 3 }); }
+        else if (s.screen === 'createParcel' && s.step === 3) { if (input) input.value = ''; this.setState({ step: 4 }); }
+        else if (s.screen === 'publishFlight' && s.step === 2) { if (input) input.value = ''; this.setState({ step: 3 }); }
+        else if (s.screen === 'rating' && s.step === 1) { if (input) input.value = ''; this.setState({ step: 2 }); }
+        else if (text) { if (input) input.value = ''; }
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
