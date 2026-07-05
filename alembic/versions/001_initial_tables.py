@@ -17,37 +17,24 @@ depends_on = None
 def upgrade() -> None:
     """Создание всех 10 таблиц и enum-типов."""
 
-    # --- Enum-типы через DO блок (идемпотентно для PostgreSQL) ---
-    op.execute("""
-        DO $$
-        BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
-                CREATE TYPE userrole AS ENUM ('sender', 'traveler', 'both');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'parcelstatus') THEN
-                CREATE TYPE parcelstatus AS ENUM ('pending', 'accepted', 'handed', 'in_transit', 'delivered', 'cancelled');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'parcelsize') THEN
-                CREATE TYPE parcelsize AS ENUM ('small', 'medium', 'large');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'flightstatus') THEN
-                CREATE TYPE flightstatus AS ENUM ('active', 'full', 'in_transit', 'completed', 'cancelled');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'matchstatus') THEN
-                CREATE TYPE matchstatus AS ENUM ('pending', 'accepted', 'declined', 'counter');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subscriptionplan') THEN
-                CREATE TYPE subscriptionplan AS ENUM ('monthly', 'quarterly', 'yearly', 'trial');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentmethod') THEN
-                CREATE TYPE paymentmethod AS ENUM ('stars', 'ton');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'paymentstatus') THEN
-                CREATE TYPE paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded');
-            END IF;
-        END
-        $$;
-    """)
+    # --- Enum-типы (сначала удаляем если есть для идемпотентности) ---
+    op.execute("DROP TYPE IF EXISTS userrole CASCADE")
+    op.execute("DROP TYPE IF EXISTS parcelstatus CASCADE")
+    op.execute("DROP TYPE IF EXISTS parcelsize CASCADE")
+    op.execute("DROP TYPE IF EXISTS flightstatus CASCADE")
+    op.execute("DROP TYPE IF EXISTS matchstatus CASCADE")
+    op.execute("DROP TYPE IF EXISTS subscriptionplan CASCADE")
+    op.execute("DROP TYPE IF EXISTS paymentmethod CASCADE")
+    op.execute("DROP TYPE IF EXISTS paymentstatus CASCADE")
+
+    op.execute("CREATE TYPE userrole AS ENUM ('sender', 'traveler', 'both')")
+    op.execute("CREATE TYPE parcelstatus AS ENUM ('pending', 'accepted', 'handed', 'in_transit', 'delivered', 'cancelled')")
+    op.execute("CREATE TYPE parcelsize AS ENUM ('small', 'medium', 'large')")
+    op.execute("CREATE TYPE flightstatus AS ENUM ('active', 'full', 'in_transit', 'completed', 'cancelled')")
+    op.execute("CREATE TYPE matchstatus AS ENUM ('pending', 'accepted', 'declined', 'counter')")
+    op.execute("CREATE TYPE subscriptionplan AS ENUM ('monthly', 'quarterly', 'yearly', 'trial')")
+    op.execute("CREATE TYPE paymentmethod AS ENUM ('stars', 'ton')")
+    op.execute("CREATE TYPE paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded')")
 
     # Создаём Enum объекты для использования в колонках
     userrole = sa.Enum("sender", "traveler", "both", name="userrole", create_constraint=True)
