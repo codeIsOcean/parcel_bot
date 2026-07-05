@@ -6,6 +6,7 @@ Create Date: 2026-07-03
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 # Идентификаторы ревизии
 revision = "001a2b3c4d5e"
@@ -16,49 +17,88 @@ depends_on = None
 
 def upgrade() -> None:
     """Создание всех 10 таблиц и enum-типов."""
+    connection = op.get_bind()
 
-    # --- Enum-типы (сначала удаляем если есть для идемпотентности) ---
-    op.execute("DROP TYPE IF EXISTS userrole CASCADE")
-    op.execute("DROP TYPE IF EXISTS parcelstatus CASCADE")
-    op.execute("DROP TYPE IF EXISTS parcelsize CASCADE")
-    op.execute("DROP TYPE IF EXISTS flightstatus CASCADE")
-    op.execute("DROP TYPE IF EXISTS matchstatus CASCADE")
-    op.execute("DROP TYPE IF EXISTS subscriptionplan CASCADE")
-    op.execute("DROP TYPE IF EXISTS paymentmethod CASCADE")
-    op.execute("DROP TYPE IF EXISTS paymentstatus CASCADE")
+    # --- Enum-типы: создаём идемпотентно через DO блок (паттерн из test_kvdModerBotProd) ---
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE userrole AS ENUM ('sender', 'traveler', 'both');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
 
-    op.execute("CREATE TYPE userrole AS ENUM ('sender', 'traveler', 'both')")
-    op.execute("CREATE TYPE parcelstatus AS ENUM ('pending', 'accepted', 'handed', 'in_transit', 'delivered', 'cancelled')")
-    op.execute("CREATE TYPE parcelsize AS ENUM ('small', 'medium', 'large')")
-    op.execute("CREATE TYPE flightstatus AS ENUM ('active', 'full', 'in_transit', 'completed', 'cancelled')")
-    op.execute("CREATE TYPE matchstatus AS ENUM ('pending', 'accepted', 'declined', 'counter')")
-    op.execute("CREATE TYPE subscriptionplan AS ENUM ('monthly', 'quarterly', 'yearly', 'trial')")
-    op.execute("CREATE TYPE paymentmethod AS ENUM ('stars', 'ton')")
-    op.execute("CREATE TYPE paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded')")
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE parcelstatus AS ENUM ('pending', 'accepted', 'handed', 'in_transit', 'delivered', 'cancelled');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
+
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE parcelsize AS ENUM ('small', 'medium', 'large');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
+
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE flightstatus AS ENUM ('active', 'full', 'in_transit', 'completed', 'cancelled');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
+
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE matchstatus AS ENUM ('pending', 'accepted', 'declined', 'counter');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
+
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE subscriptionplan AS ENUM ('monthly', 'quarterly', 'yearly', 'trial');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
+
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE paymentmethod AS ENUM ('stars', 'ton');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
+
+    connection.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """))
 
     # Создаём Enum объекты для использования в колонках (create_type=False чтобы не создавать типы повторно)
-    userrole = sa.Enum("sender", "traveler", "both", name="userrole", create_constraint=True, create_type=False)
-    parcelstatus = sa.Enum(
+    userrole = postgresql.ENUM("sender", "traveler", "both", name="userrole", create_type=False)
+    parcelstatus = postgresql.ENUM(
         "pending", "accepted", "handed", "in_transit", "delivered", "cancelled",
-        name="parcelstatus", create_constraint=True, create_type=False,
+        name="parcelstatus", create_type=False,
     )
-    parcelsize = sa.Enum("small", "medium", "large", name="parcelsize", create_constraint=True, create_type=False)
-    flightstatus = sa.Enum(
+    parcelsize = postgresql.ENUM("small", "medium", "large", name="parcelsize", create_type=False)
+    flightstatus = postgresql.ENUM(
         "active", "full", "in_transit", "completed", "cancelled",
-        name="flightstatus", create_constraint=True, create_type=False,
+        name="flightstatus", create_type=False,
     )
-    matchstatus = sa.Enum(
+    matchstatus = postgresql.ENUM(
         "pending", "accepted", "declined", "counter",
-        name="matchstatus", create_constraint=True, create_type=False,
+        name="matchstatus", create_type=False,
     )
-    subscriptionplan = sa.Enum(
+    subscriptionplan = postgresql.ENUM(
         "monthly", "quarterly", "yearly", "trial",
-        name="subscriptionplan", create_constraint=True, create_type=False,
+        name="subscriptionplan", create_type=False,
     )
-    paymentmethod = sa.Enum("stars", "ton", name="paymentmethod", create_constraint=True, create_type=False)
-    paymentstatus = sa.Enum(
+    paymentmethod = postgresql.ENUM("stars", "ton", name="paymentmethod", create_type=False)
+    paymentstatus = postgresql.ENUM(
         "pending", "completed", "failed", "refunded",
-        name="paymentstatus", create_constraint=True, create_type=False,
+        name="paymentstatus", create_type=False,
     )
 
     # --- 1. users ---
@@ -222,6 +262,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Удаление всех таблиц и enum-типов (в обратном порядке зависимостей)."""
+    connection = op.get_bind()
 
     # Сначала таблицы с FK, потом базовые
     op.drop_table("route_votes")
@@ -235,12 +276,12 @@ def downgrade() -> None:
     op.drop_table("cities")
     op.drop_table("users")
 
-    # Удаление enum-типов
-    sa.Enum(name="paymentstatus").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="paymentmethod").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="subscriptionplan").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="matchstatus").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="flightstatus").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="parcelsize").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="parcelstatus").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="userrole").drop(op.get_bind(), checkfirst=True)
+    # Удаление enum-типов идемпотентно (IF EXISTS)
+    connection.execute(sa.text("DROP TYPE IF EXISTS paymentstatus"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS paymentmethod"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS subscriptionplan"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS matchstatus"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS flightstatus"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS parcelsize"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS parcelstatus"))
+    connection.execute(sa.text("DROP TYPE IF EXISTS userrole"))

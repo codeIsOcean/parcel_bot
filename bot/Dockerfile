@@ -16,5 +16,7 @@ RUN pip install --no-cache-dir -r backend/requirements.txt -r bot/requirements.t
 COPY shared/ /app/shared/
 COPY backend/ /app/backend/
 COPY bot/ /app/bot/
+COPY alembic/ /app/alembic/
+COPY alembic.ini /app/alembic.ini
 
 CMD ["python", "-m", "bot.main"]

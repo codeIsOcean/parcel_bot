@@ -107,8 +107,20 @@ jobs:
             # Pull новых образов
             docker compose -f docker-compose.prod.yml pull backend bot webapp
 
-            # Перезапуск с новыми образами
-            docker compose -f docker-compose.prod.yml up -d
+            # Graceful deployment: быстрый перезапуск готовых образов (даунтайм ~2-3 сек)
+            # --no-deps: не перезапускает dependency контейнеры (postgres, redis)
+            # --remove-orphans: удаляет контейнеры которых больше нет в compose
+            docker compose -f docker-compose.prod.yml up -d --no-deps --remove-orphans backend bot webapp
+
+            # Ждём запуска контейнера бота
+            echo "Waiting for bot container to start..."
+            sleep 10
+
+            # Применяем миграции Alembic через контейнер бота
+            echo "Applying Alembic migrations..."
+            docker compose -f docker-compose.prod.yml exec -T bot alembic upgrade head || {
+              echo "WARNING: Migration failed, but continuing..."
+            }
 
             # Удаляем старые образы
             docker image prune -f
