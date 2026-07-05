@@ -36,29 +36,29 @@ def upgrade() -> None:
     op.execute("CREATE TYPE paymentmethod AS ENUM ('stars', 'ton')")
     op.execute("CREATE TYPE paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded')")
 
-    # Создаём Enum объекты для использования в колонках
-    userrole = sa.Enum("sender", "traveler", "both", name="userrole", create_constraint=True)
+    # Создаём Enum объекты для использования в колонках (create_type=False чтобы не создавать типы повторно)
+    userrole = sa.Enum("sender", "traveler", "both", name="userrole", create_constraint=True, create_type=False)
     parcelstatus = sa.Enum(
         "pending", "accepted", "handed", "in_transit", "delivered", "cancelled",
-        name="parcelstatus", create_constraint=True,
+        name="parcelstatus", create_constraint=True, create_type=False,
     )
-    parcelsize = sa.Enum("small", "medium", "large", name="parcelsize", create_constraint=True)
+    parcelsize = sa.Enum("small", "medium", "large", name="parcelsize", create_constraint=True, create_type=False)
     flightstatus = sa.Enum(
         "active", "full", "in_transit", "completed", "cancelled",
-        name="flightstatus", create_constraint=True,
+        name="flightstatus", create_constraint=True, create_type=False,
     )
     matchstatus = sa.Enum(
         "pending", "accepted", "declined", "counter",
-        name="matchstatus", create_constraint=True,
+        name="matchstatus", create_constraint=True, create_type=False,
     )
     subscriptionplan = sa.Enum(
         "monthly", "quarterly", "yearly", "trial",
-        name="subscriptionplan", create_constraint=True,
+        name="subscriptionplan", create_constraint=True, create_type=False,
     )
-    paymentmethod = sa.Enum("stars", "ton", name="paymentmethod", create_constraint=True)
+    paymentmethod = sa.Enum("stars", "ton", name="paymentmethod", create_constraint=True, create_type=False)
     paymentstatus = sa.Enum(
         "pending", "completed", "failed", "refunded",
-        name="paymentstatus", create_constraint=True,
+        name="paymentstatus", create_constraint=True, create_type=False,
     )
 
     # --- 1. users ---
