@@ -71,6 +71,9 @@ jobs:
     name: Deploy to VPS
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Checkout (для docker-compose и nginx конфигов)
@@ -104,11 +107,8 @@ jobs:
             # Pull новых образов
             docker compose -f docker-compose.prod.yml pull backend bot webapp
 
-            # Перезапуск с новыми образами (zero-downtime — по одному)
-            docker compose -f docker-compose.prod.yml up -d --no-deps backend
-            docker compose -f docker-compose.prod.yml up -d --no-deps bot
-            docker compose -f docker-compose.prod.yml up -d --no-deps webapp
-            docker compose -f docker-compose.prod.yml up -d --no-deps nginx
+            # Перезапуск с новыми образами
+            docker compose -f docker-compose.prod.yml up -d
 
             # Удаляем старые образы
             docker image prune -f
