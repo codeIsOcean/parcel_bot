@@ -27,7 +27,8 @@ class Match(TimestampMixin, Base):
 
     # Статус заявки
     status: Mapped[MatchStatus] = mapped_column(
-        Enum(MatchStatus, name="matchstatus", create_constraint=True),
+        Enum(MatchStatus, name="matchstatus", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         default=MatchStatus.PENDING,
         nullable=False,
     )

@@ -48,7 +48,8 @@ class Parcel(TimestampMixin, Base):
 
     # Размер
     size: Mapped[ParcelSize] = mapped_column(
-        Enum(ParcelSize, name="parcelsize", create_constraint=True),
+        Enum(ParcelSize, name="parcelsize", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         default=ParcelSize.MEDIUM,
         nullable=False,
     )
@@ -64,7 +65,8 @@ class Parcel(TimestampMixin, Base):
 
     # Текущий статус
     status: Mapped[ParcelStatus] = mapped_column(
-        Enum(ParcelStatus, name="parcelstatus", create_constraint=True),
+        Enum(ParcelStatus, name="parcelstatus", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         default=ParcelStatus.PENDING,
         nullable=False,
         index=True,

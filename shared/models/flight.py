@@ -50,7 +50,8 @@ class Flight(TimestampMixin, Base):
 
     # Статус
     status: Mapped[FlightStatus] = mapped_column(
-        Enum(FlightStatus, name="flightstatus", create_constraint=True),
+        Enum(FlightStatus, name="flightstatus", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         default=FlightStatus.ACTIVE,
         nullable=False,
         index=True,

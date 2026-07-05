@@ -33,7 +33,8 @@ class User(TimestampMixin, Base):
 
     # Текущая роль
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="userrole", create_constraint=True),
+        Enum(UserRole, name="userrole", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         default=UserRole.SENDER,
         nullable=False,
     )

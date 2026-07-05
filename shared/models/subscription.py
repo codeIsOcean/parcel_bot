@@ -25,7 +25,8 @@ class Subscription(TimestampMixin, Base):
 
     # План подписки
     plan: Mapped[SubscriptionPlan] = mapped_column(
-        Enum(SubscriptionPlan, name="subscriptionplan", create_constraint=True),
+        Enum(SubscriptionPlan, name="subscriptionplan", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         nullable=False,
     )
 

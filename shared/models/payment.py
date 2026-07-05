@@ -36,13 +36,15 @@ class Payment(TimestampMixin, Base):
 
     # Метод оплаты
     method: Mapped[PaymentMethod] = mapped_column(
-        Enum(PaymentMethod, name="paymentmethod", create_constraint=True),
+        Enum(PaymentMethod, name="paymentmethod", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         nullable=False,
     )
 
     # Статус
     status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus, name="paymentstatus", create_constraint=True),
+        Enum(PaymentStatus, name="paymentstatus", create_constraint=True,
+             values_callable=lambda enum: [e.value for e in enum]),
         default=PaymentStatus.PENDING,
         nullable=False,
     )
