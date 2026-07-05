@@ -18,4 +18,5 @@ COPY alembic/ /app/alembic/
 COPY alembic.ini /app/alembic.ini
 
 # Запуск: миграции + uvicorn
+ENV PYTHONPATH=/app
 CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]
