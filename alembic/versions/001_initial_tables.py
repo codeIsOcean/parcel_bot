@@ -17,45 +17,40 @@ depends_on = None
 def upgrade() -> None:
     """Создание всех 10 таблиц и enum-типов."""
 
-    # --- Enum-типы (checkfirst=True для идемпотентности) ---
-    userrole = sa.Enum("sender", "traveler", "both", name="userrole", create_constraint=True)
-    userrole.create(op.get_bind(), checkfirst=True)
+    # --- Enum-типы через прямой SQL (идемпотентно) ---
+    op.execute("CREATE TYPE IF NOT EXISTS userrole AS ENUM ('sender', 'traveler', 'both')")
+    op.execute("CREATE TYPE IF NOT EXISTS parcelstatus AS ENUM ('pending', 'accepted', 'handed', 'in_transit', 'delivered', 'cancelled')")
+    op.execute("CREATE TYPE IF NOT EXISTS parcelsize AS ENUM ('small', 'medium', 'large')")
+    op.execute("CREATE TYPE IF NOT EXISTS flightstatus AS ENUM ('active', 'full', 'in_transit', 'completed', 'cancelled')")
+    op.execute("CREATE TYPE IF NOT EXISTS matchstatus AS ENUM ('pending', 'accepted', 'declined', 'counter')")
+    op.execute("CREATE TYPE IF NOT EXISTS subscriptionplan AS ENUM ('monthly', 'quarterly', 'yearly', 'trial')")
+    op.execute("CREATE TYPE IF NOT EXISTS paymentmethod AS ENUM ('stars', 'ton')")
+    op.execute("CREATE TYPE IF NOT EXISTS paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded')")
 
+    # Создаём Enum объекты для использования в колонках
+    userrole = sa.Enum("sender", "traveler", "both", name="userrole", create_constraint=True)
     parcelstatus = sa.Enum(
         "pending", "accepted", "handed", "in_transit", "delivered", "cancelled",
         name="parcelstatus", create_constraint=True,
     )
-    parcelstatus.create(op.get_bind(), checkfirst=True)
-
     parcelsize = sa.Enum("small", "medium", "large", name="parcelsize", create_constraint=True)
-    parcelsize.create(op.get_bind(), checkfirst=True)
-
     flightstatus = sa.Enum(
         "active", "full", "in_transit", "completed", "cancelled",
         name="flightstatus", create_constraint=True,
     )
-    flightstatus.create(op.get_bind(), checkfirst=True)
-
     matchstatus = sa.Enum(
         "pending", "accepted", "declined", "counter",
         name="matchstatus", create_constraint=True,
     )
-    matchstatus.create(op.get_bind(), checkfirst=True)
-
     subscriptionplan = sa.Enum(
         "monthly", "quarterly", "yearly", "trial",
         name="subscriptionplan", create_constraint=True,
     )
-    subscriptionplan.create(op.get_bind(), checkfirst=True)
-
     paymentmethod = sa.Enum("stars", "ton", name="paymentmethod", create_constraint=True)
-    paymentmethod.create(op.get_bind(), checkfirst=True)
-
     paymentstatus = sa.Enum(
         "pending", "completed", "failed", "refunded",
         name="paymentstatus", create_constraint=True,
     )
-    paymentstatus.create(op.get_bind(), checkfirst=True)
 
     # --- 1. users ---
     op.create_table(
