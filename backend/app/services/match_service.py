@@ -153,9 +153,9 @@ async def accept_match(
 
     parcel.traveler_id = traveler_id
     parcel.status = ParcelStatus.ACCEPTED
-        # Уменьшаем доступный вес рейса
-        if flight and parcel.weight:
-            flight.available_kg = max(0, flight.available_kg - parcel.weight)
+    # Уменьшаем доступный вес рейса
+    if flight and parcel.weight:
+        flight.available_kg = max(0, flight.available_kg - parcel.weight)
 
     await session.commit()
     await session.refresh(match)
