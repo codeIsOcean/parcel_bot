@@ -223,7 +223,7 @@ onMounted(async () => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #6C5CE7;
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,7 +233,7 @@ onMounted(async () => {
 .avatar-text {
   font-size: 32px;
   font-weight: 800;
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Бейдж верификации на аватаре */
@@ -243,14 +243,14 @@ onMounted(async () => {
   right: 0;
   width: 24px;
   height: 24px;
-  background: #30D158;
+  background: var(--success);
   border-radius: 50%;
-  border: 3px solid #000;
+  border: 3px solid var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -258,13 +258,13 @@ onMounted(async () => {
 .profile-name {
   font-size: 22px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   margin-bottom: 2px;
 }
 
 .profile-username {
   font-size: 14px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-bottom: 10px;
 }
 
@@ -279,12 +279,12 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 500;
   background: rgba(255, 69, 58, 0.1);
-  color: #FF453A;
+  color: var(--danger);
 }
 
 .verification-status.verified {
   background: rgba(48, 209, 88, 0.1);
-  color: #30D158;
+  color: var(--success);
 }
 
 .verification-icon {
@@ -304,19 +304,19 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   padding: 14px 8px;
-  background: #1C1C1E;
+  background: var(--surface);
   border-radius: 12px;
 }
 
 .stat-value {
   font-size: 22px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .stat-label {
   font-size: 11px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-top: 4px;
   text-align: center;
 }
@@ -324,8 +324,8 @@ onMounted(async () => {
 /* Кнопка редактирования */
 .btn-outline {
   background: transparent;
-  border: 1px solid #3A3A3C;
-  color: #fff;
+  border: 1px solid var(--border-strong);
+  color: var(--text-1);
   padding: 12px;
   border-radius: 12px;
   font-size: 14px;
@@ -335,7 +335,7 @@ onMounted(async () => {
 }
 
 .btn-outline:active {
-  background: #2C2C2E;
+  background: var(--surface-2);
 }
 
 .edit-btn {
@@ -350,7 +350,7 @@ onMounted(async () => {
 .section-title {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   margin-bottom: 12px;
 }
 
@@ -358,7 +358,7 @@ onMounted(async () => {
 .empty-reviews {
   text-align: center;
   padding: 30px;
-  color: #8E8E93;
+  color: var(--text-2);
   font-size: 14px;
 }
 
@@ -385,8 +385,8 @@ onMounted(async () => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #3A3A3C;
-  color: #fff;
+  background: var(--surface-3);
+  color: var(--text-1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,13 +397,13 @@ onMounted(async () => {
 .review-name {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 /* Текст отзыва */
 .review-text {
   font-size: 13px;
-  color: #C7C7CC;
+  color: var(--text-3);
   line-height: 1.4;
   margin-bottom: 6px;
 }
@@ -411,6 +411,5 @@ onMounted(async () => {
 /* Дата отзыва */
 .review-date {
   font-size: 11px;
-  color: #636366;
-}
-</style>
+  color: var(--text-3);
+}</style>

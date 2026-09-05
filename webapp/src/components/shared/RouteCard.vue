@@ -70,17 +70,16 @@ const cityFlags = {
 .route-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .route-count {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-top: 2px;
 }
 
 .route-arrow {
   font-size: 20px;
-  color: #8E8E93;
-}
-</style>
+  color: var(--text-2);
+}</style>

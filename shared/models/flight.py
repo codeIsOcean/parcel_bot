@@ -1,6 +1,6 @@
 import enum
-from datetime import date
-from sqlalchemy import BigInteger, Date, Float, ForeignKey, Integer, String, Enum, Text
+from datetime import date, datetime
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Enum, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from shared.models.base import Base, TimestampMixin
 

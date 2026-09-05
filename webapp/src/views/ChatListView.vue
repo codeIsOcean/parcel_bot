@@ -116,7 +116,7 @@ const openChat = (chat) => {
   gap: 12px;
   padding: 12px 0;
   cursor: pointer;
-  border-bottom: 1px solid #1C1C1E;
+  border-bottom: 1px solid var(--surface);
   transition: background 0.15s;
 }
 
@@ -147,8 +147,8 @@ const openChat = (chat) => {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #6C5CE7;
-  color: #fff;
+  background: var(--primary);
+  color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,9 +163,9 @@ const openChat = (chat) => {
   right: 1px;
   width: 12px;
   height: 12px;
-  background: #30D158;
+  background: var(--success);
   border-radius: 50%;
-  border: 2px solid #000;
+  border: 2px solid var(--bg);
 }
 
 /* Содержимое чата */
@@ -184,7 +184,7 @@ const openChat = (chat) => {
 .chat-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -192,7 +192,7 @@ const openChat = (chat) => {
 
 .chat-time {
   font-size: 12px;
-  color: #8E8E93;
+  color: var(--text-2);
   flex-shrink: 0;
   margin-left: 8px;
 }
@@ -205,7 +205,7 @@ const openChat = (chat) => {
 
 .chat-last-message {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -218,8 +218,8 @@ const openChat = (chat) => {
   height: 20px;
   padding: 0 6px;
   border-radius: 10px;
-  background: #6C5CE7;
-  color: #fff;
+  background: var(--primary);
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -251,13 +251,12 @@ const openChat = (chat) => {
 
 .empty-text {
   font-size: 16px;
-  color: #fff;
+  color: var(--text-1);
   font-weight: 600;
   margin-bottom: 6px;
 }
 
 .empty-hint {
   font-size: 13px;
-  color: #8E8E93;
-}
-</style>
+  color: var(--text-2);
+}</style>

@@ -59,14 +59,16 @@ def get_traveler_menu(lang: str = "ru") -> ReplyKeyboardMarkup:
     )
 
 
-def get_webapp_button(lang: str = "ru") -> InlineKeyboardMarkup | None:
-    """Кнопка для открытия WebApp (если URL настроен)."""
+def get_webapp_button(lang: str = "ru", path: str = "/", text_key: str = "open_webapp") -> InlineKeyboardMarkup | None:
+    """Кнопка для открытия WebApp на нужном экране (если URL настроен)."""
     if not WEBAPP_URL:
         return None
+    # Открываем не корень, а конкретный раздел — меньше шагов до цели
+    url = WEBAPP_URL.rstrip("/") + path
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text=t(lang, "open_webapp"),
-            web_app=WebAppInfo(url=WEBAPP_URL),
+            text=t(lang, text_key),
+            web_app=WebAppInfo(url=url),
         )],
     ])
 

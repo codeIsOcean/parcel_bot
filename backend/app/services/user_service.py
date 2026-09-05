@@ -1,4 +1,6 @@
 import logging
+
+from backend.app.config import settings
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from shared.models.user import User, UserRole
@@ -41,6 +43,8 @@ async def get_or_create_user(
         lang=language_code if language_code in ("ru", "en", "kz") else "ru",
         is_premium=is_premium,
         role=UserRole.SENDER,
+        # Пробные дни выдаются один раз при регистрации
+        trial_days_left=settings.trial_active_days,
     )
     session.add(user)
     await session.commit()

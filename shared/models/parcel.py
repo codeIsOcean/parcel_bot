@@ -1,5 +1,6 @@
 import enum
-from sqlalchemy import BigInteger, Float, ForeignKey, Integer, String, Enum, Text
+from datetime import datetime
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Integer, String, Enum, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from shared.models.base import Base, TimestampMixin
 
@@ -71,6 +72,30 @@ class Parcel(TimestampMixin, Base):
         nullable=False,
         index=True,
     )
+
+    # === Жизненный цикл доставки ===
+
+    # Код выдачи. Выдаётся отправителю при передаче посылки перевозчику,
+    # перевозчик вводит его при выдаче — это подтверждение доставки.
+    handover_code: Mapped[str | None] = mapped_column(String(6), nullable=True)
+
+    # Когда посылка передана перевозчику
+    handed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Когда перевозчик вылетел
+    in_transit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Когда перевозчик прилетел в город назначения
+    arrived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Когда посылка выдана получателю
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Фото при передаче перевозчику
+    handover_photo_file_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Фото при выдаче получателю
+    delivery_photo_file_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Связи
     sender = relationship("User", back_populates="parcels", foreign_keys=[sender_id])

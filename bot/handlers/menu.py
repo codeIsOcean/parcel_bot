@@ -4,10 +4,12 @@ from aiogram import Bot, Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from sqlalchemy import distinct, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.services import user_service
 from bot.keyboards.main_kb import get_sender_menu, get_traveler_menu, get_webapp_button
+from shared.models.message import RelayMessage
 from bot.utils.locale import t
 from bot.utils.screen_manager import ScreenManager
 from shared.models.user import UserRole
@@ -200,8 +202,8 @@ async def on_find_travelers(message: Message, session: AsyncSession, bot: Bot):
     lang = user.lang
     screen = ScreenManager(bot)
 
-    # Показываем кнопку webapp для поиска попутчиков
-    webapp_kb = get_webapp_button(lang)
+    # Показываем кнопку webapp сразу на списке попутчиков
+    webapp_kb = get_webapp_button(lang, path="/travelers")
     await screen.show(
         message.from_user.id,
         t(lang, "open_webapp"),
@@ -212,14 +214,36 @@ async def on_find_travelers(message: Message, session: AsyncSession, bot: Bot):
 
 @router.message(F.text.contains("Чаты") | F.text.contains("Chats"), StateFilter(None))
 async def on_chats(message: Message, session: AsyncSession, bot: Bot):
-    """Кнопка 'Чаты' — пока нет активных чатов."""
+    """Кнопка 'Чаты' — сводка по перепискам с переходом в приложение."""
     user, _ = await user_service.get_or_create_user(
         session, telegram_id=message.from_user.id, first_name=message.from_user.first_name,
     )
     lang = user.lang
     screen = ScreenManager(bot)
 
-    await screen.show(message.from_user.id, t(lang, "no_chats"), slot="inline")
+    # Считаем переписки и непрочитанные — раньше здесь была заглушка «нет чатов»
+    chats_count = (await session.execute(
+        select(func.count(distinct(RelayMessage.chat_id))).where(
+            or_(RelayMessage.sender_id == user.id, RelayMessage.receiver_id == user.id)
+        )
+    )).scalar() or 0
+
+    if not chats_count:
+        await screen.show(message.from_user.id, t(lang, "no_chats"), slot="inline")
+        return
+
+    unread = (await session.execute(
+        select(func.count(RelayMessage.id)).where(
+            RelayMessage.receiver_id == user.id,
+            RelayMessage.is_read == False,  # noqa: E712
+        )
+    )).scalar() or 0
+
+    text = t(lang, "chats_summary", chats=chats_count, unread=unread)
+    await screen.show(
+        message.from_user.id, text, slot="inline",
+        reply_markup=get_webapp_button(lang, path="/chats"),
+    )
 
 
 @router.message(F.text.contains("Входящие заявки") | F.text.contains("Incoming requests"), StateFilter(None))
@@ -231,8 +255,8 @@ async def on_incoming_requests(message: Message, session: AsyncSession, bot: Bot
     lang = user.lang
     screen = ScreenManager(bot)
 
-    # Показываем кнопку webapp для входящих заявок
-    webapp_kb = get_webapp_button(lang)
+    # Показываем кнопку webapp сразу на экране входящих заявок
+    webapp_kb = get_webapp_button(lang, path="/requests")
     await screen.show(
         message.from_user.id,
         t(lang, "open_webapp"),
@@ -250,8 +274,8 @@ async def on_subscription(message: Message, session: AsyncSession, bot: Bot):
     lang = user.lang
     screen = ScreenManager(bot)
 
-    # Показываем кнопку webapp для подписки
-    webapp_kb = get_webapp_button(lang)
+    # Показываем кнопку webapp сразу на экране подписки
+    webapp_kb = get_webapp_button(lang, path="/subscription")
     await screen.show(
         message.from_user.id,
         t(lang, "open_webapp"),

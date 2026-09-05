@@ -160,12 +160,11 @@ onMounted(async () => {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .empty-icon {
   font-size: 48px;
   display: block;
   margin-bottom: 12px;
-}
-</style>
+}</style>

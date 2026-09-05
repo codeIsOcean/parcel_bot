@@ -29,14 +29,9 @@ export const flightsApi = {
     api.get(`/flights/${id}`),
 
   /**
-   * Получить заявки на мой рейс.
+   * Популярные маршруты: сколько активных рейсов идёт по каждому.
    */
-  getRequests: (flightId) =>
-    api.get(`/flights/${flightId}/requests`),
+  getPopularRoutes: (limit = 6) =>
+    api.get('/flights/popular-routes', { params: { limit } }),
 
-  /**
-   * Принять/отклонить заявку.
-   */
-  respondToRequest: (flightId, requestId, action) =>
-    api.post(`/flights/${flightId}/requests/${requestId}/${action}`),
 }

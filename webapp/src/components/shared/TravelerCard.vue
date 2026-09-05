@@ -98,11 +98,11 @@ const initials = name
   gap: 4px;
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .verified-badge {
-  color: #30D158;
+  color: var(--success);
   font-size: 13px;
 }
 
@@ -115,7 +115,7 @@ const initials = name
 
 .trips {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .traveler-right {
@@ -126,13 +126,13 @@ const initials = name
 .weight {
   font-size: 15px;
   font-weight: 700;
-  color: #30D158;
+  color: var(--success);
   display: block;
 }
 
 .date {
   font-size: 12px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-top: 2px;
 }
 
@@ -151,11 +151,10 @@ const initials = name
 
 .tag-flight {
   background: rgba(142, 142, 147, 0.15);
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .tag-price {
   background: rgba(48, 209, 88, 0.12);
-  color: #30D158;
-}
-</style>
+  color: var(--success);
+}</style>

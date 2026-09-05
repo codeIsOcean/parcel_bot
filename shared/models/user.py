@@ -1,5 +1,6 @@
 import enum
-from sqlalchemy import BigInteger, Boolean, Float, Integer, String, Enum, Text
+from datetime import date
+from sqlalchemy import BigInteger, Boolean, Date, Float, Integer, String, Enum, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from shared.models.base import Base, TimestampMixin
 
@@ -56,6 +57,24 @@ class User(TimestampMixin, Base):
 
     # Бот заблокирован пользователем
     bot_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Заблокирован модерацией — доступ к API закрыт
+    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Сколько жалоб на пользователя поступило
+    reports_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Внутренний баланс в Telegram Stars. Пополняется звёздами или TON,
+    # с него списывается дневной тариф перевозчика.
+    balance_stars: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Дата, за которую тариф уже оплачен или засчитан пробным днём.
+    # Пока она равна сегодняшней, перевозчик работает без повторных списаний.
+    last_fee_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    # Сколько пробных дней осталось. Тратятся только в дни, когда перевозчик
+    # реально отвечает на заявки, поэтому простой их не сжигает.
+    trial_days_left: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Язык интерфейса (ru / en / kz)
     lang: Mapped[str] = mapped_column(String(5), default="ru", nullable=False)

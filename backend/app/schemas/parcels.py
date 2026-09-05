@@ -28,6 +28,11 @@ class ParcelResponse(BaseModel):
     status: str
     photo_file_ids: str | None = None
     created_at: datetime
+    # Этапы доставки
+    handed_at: datetime | None = None
+    in_transit_at: datetime | None = None
+    arrived_at: datetime | None = None
+    delivered_at: datetime | None = None
     # Данные перевозчика (заполняются при наличии traveler_id)
     traveler_name: str | None = None
     traveler_rating: float | None = None
@@ -41,3 +46,14 @@ class PaginatedParcels(BaseModel):
     total: int
     page: int
     limit: int
+
+
+class DeliveryStepRequest(BaseModel):
+    """Отметка этапа доставки перевозчиком."""
+    # Фото при передаче или выдаче — file_id из Telegram через запятую
+    photo_file_ids: str | None = Field(default=None, max_length=2000)
+
+
+class DeliveryConfirmRequest(DeliveryStepRequest):
+    """Закрытие доставки кодом, который назвал получатель."""
+    code: str = Field(min_length=3, max_length=8)

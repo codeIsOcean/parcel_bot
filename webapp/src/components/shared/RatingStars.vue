@@ -49,12 +49,12 @@ const setRating = (star) => {
 }
 
 .star {
-  color: #3A3A3C;
+  color: var(--surface-3);
   transition: color 0.15s;
 }
 
 .star.filled {
-  color: #FFD60A;
+  color: var(--warning);
 }
 
 .interactive .star {
@@ -69,11 +69,10 @@ const setRating = (star) => {
   margin-left: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 /* Размеры */
 .sm .star { font-size: 14px; }
 .md .star { font-size: 22px; }
-.lg .star { font-size: 32px; }
-</style>
+.lg .star { font-size: 32px; }</style>

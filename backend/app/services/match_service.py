@@ -2,6 +2,8 @@ import logging
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from backend.app.services import chat_service, notification_service
+from backend.app.services.access_service import ensure_can_respond
 from shared.models.match import Match, MatchStatus
 from shared.models.parcel import Parcel, ParcelStatus
 from shared.models.flight import Flight
@@ -53,6 +55,14 @@ async def create_match(
 
     await session.commit()
     await session.refresh(match)
+
+    # Переписку заводим сразу: стороны могут договориться до принятия заявки
+    if flight:
+        await chat_service.ensure_session_for_match(session, parcel, flight)
+
+    # Перевозчик узнаёт о заявке сразу, даже если Mini App закрыт
+    if flight:
+        await notification_service.notify_new_request(session, parcel, flight)
 
     logger.info("[MATCH] Создан: match_id=%s", match.id)
     return match
@@ -110,6 +120,83 @@ async def get_flight_requests(
     return requests, total
 
 
+async def get_incoming_requests(
+    session: AsyncSession,
+    traveler_id: int,
+) -> list[dict]:
+    """Все заявки по активным рейсам перевозчика, сгруппированные по рейсу.
+
+    Заявки видны всегда — платный доступ ограничивает только ответ на них.
+    """
+    from datetime import date
+
+    from shared.models.flight import FlightStatus
+
+    # Берём только рейсы, которые ещё не улетели
+    flights = list((await session.execute(
+        select(Flight)
+        .where(
+            Flight.traveler_id == traveler_id,
+            Flight.status == FlightStatus.ACTIVE,
+            Flight.flight_date >= date.today(),
+        )
+        .order_by(Flight.flight_date.asc())
+    )).scalars().all())
+
+    if not flights:
+        return []
+
+    # Одним запросом достаём заявки по всем рейсам сразу
+    flight_ids = [f.id for f in flights]
+    rows = (await session.execute(
+        select(Match, Parcel, User)
+        .join(Parcel, Match.parcel_id == Parcel.id)
+        .join(User, Parcel.sender_id == User.id)
+        .where(
+            Match.flight_id.in_(flight_ids),
+            Match.status == MatchStatus.PENDING,
+        )
+        .order_by(Match.created_at.desc())
+    )).all()
+
+    # Раскладываем заявки по рейсам
+    by_flight: dict[int, list[dict]] = {fid: [] for fid in flight_ids}
+    for match, parcel, sender in rows:
+        by_flight[match.flight_id].append({
+            "id": match.id,
+            "status": match.status.value,
+            "created_at": match.created_at,
+            "parcel": {
+                "id": parcel.id,
+                "description": parcel.description,
+                "weight": parcel.weight,
+                "price": parcel.price,
+            },
+            "sender": {
+                "id": sender.id,
+                "name": sender.full_name,
+                "rating": sender.rating,
+                "reviews_count": sender.reviews_count,
+                "deliveries_count": sender.deliveries_count,
+            },
+        })
+
+    return [
+        {
+            "flight": {
+                "id": f.id,
+                "from_city": f.from_city,
+                "to_city": f.to_city,
+                "flight_date": f.flight_date.isoformat(),
+                "available_kg": f.available_kg,
+                "price_per_kg": f.price_per_kg,
+            },
+            "requests": by_flight[f.id],
+        }
+        for f in flights
+    ]
+
+
 async def accept_match(
     session: AsyncSession,
     match_id: int,
@@ -136,6 +223,11 @@ async def accept_match(
     if not flight or flight.traveler_id != traveler_id:
         raise ValueError("Not authorized")
 
+    # Отвечать на заявки можно только когда открыт сегодняшний рабочий день
+    traveler = await session.get(User, traveler_id)
+    if traveler:
+        await ensure_can_respond(session, traveler)
+
     # Обновляем статус заявки
     match.status = MatchStatus.ACCEPTED
 
@@ -159,6 +251,9 @@ async def accept_match(
 
     await session.commit()
     await session.refresh(match)
+
+    # Отправитель узнаёт, что его посылку взяли
+    await notification_service.notify_request_accepted(session, parcel, flight)
 
     logger.info("[MATCH] Принят: match=%s, traveler=%s", match_id, traveler_id)
     return match
@@ -192,6 +287,11 @@ async def decline_match(
     match.status = MatchStatus.DECLINED
     await session.commit()
     await session.refresh(match)
+
+    # Отправителю сообщаем, что посылка снова в поиске
+    parcel = await session.get(Parcel, match.parcel_id)
+    if parcel:
+        await notification_service.notify_request_declined(session, parcel)
 
     logger.info("[MATCH] Отклонён: match=%s, traveler=%s", match_id, traveler_id)
     return match

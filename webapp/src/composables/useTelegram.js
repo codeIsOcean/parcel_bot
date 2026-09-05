@@ -29,6 +29,10 @@ export function useTelegram() {
       tg.ready()
       // Разворачиваем на весь экран
       tg.expand()
+      // Красим шапку и фон Telegram под фирменную палитру приложения.
+      // Методы появились в Bot API 6.1+, на старых клиентах их просто нет.
+      tg.setHeaderColor?.('#FFFFFF')
+      tg.setBackgroundColor?.('#F7F8FA')
     }
   }
 
@@ -86,6 +90,31 @@ export function useTelegram() {
   }
 
   /**
+   * Открыть счёт на оплату звёздами.
+   * Возвращает статус: paid | cancelled | failed | pending.
+   */
+  const openInvoice = (url) =>
+    new Promise((resolve) => {
+      // Вне Telegram оплатить нельзя — честно сообщаем об этом вызывающему
+      if (!tg?.openInvoice) {
+        resolve('unavailable')
+        return
+      }
+      tg.openInvoice(url, (status) => resolve(status))
+    })
+
+  /**
+   * Открыть внешнюю ссылку (кошелёк TON и подобное).
+   */
+  const openLink = (url) => {
+    if (tg?.openLink) {
+      tg.openLink(url)
+    } else {
+      window.open(url, '_blank')
+    }
+  }
+
+  /**
    * Закрыть Mini App.
    */
   const close = () => tg?.close()
@@ -102,6 +131,8 @@ export function useTelegram() {
     showMainButton,
     hideMainButton,
     haptic,
+    openInvoice,
+    openLink,
     close,
   }
 }

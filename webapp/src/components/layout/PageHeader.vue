@@ -64,9 +64,9 @@ const goBack = () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2C2C2E;
+  background: var(--surface-2);
   border: none;
-  color: #fff;
+  color: var(--text-1);
   font-size: 22px;
   display: flex;
   align-items: center;
@@ -87,13 +87,13 @@ const goBack = () => {
 .header-title {
   font-size: 22px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   line-height: 1.2;
 }
 
 .header-subtitle {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-top: 2px;
 }
 
@@ -101,7 +101,7 @@ const goBack = () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2C2C2E;
+  background: var(--surface-2);
   border: none;
   font-size: 18px;
   display: flex;
@@ -114,5 +114,4 @@ const goBack = () => {
 .spacer {
   width: 36px;
   flex-shrink: 0;
-}
-</style>
+}</style>

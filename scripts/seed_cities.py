@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
-from backend.app.database import async_session_factory
+from backend.app.database import async_session
 from shared.models.city import City
 
 
@@ -37,7 +37,7 @@ CITIES = [
 
 
 async def seed():
-    async with async_session_factory() as session:
+    async with async_session() as session:
         for name_en, name_ru, name_kz, country_code, flag, sort_order in CITIES:
             # Проверяем, не существует ли уже
             result = await session.execute(

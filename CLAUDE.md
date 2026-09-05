@@ -36,7 +36,46 @@ parcel_bot/
 6. Комментарии на русском над каждой значимой строкой
 7. Edge cases обязательны (bot blocked, API error, empty data)
 
-## Команды разработки
+## Тестовый бот (Telegram)
+- **Имя:** Посылка Бот Тест | Parcel Bot Test
+- **Username:** @parcel07test_bot
+- **Описание:** This is a test of Parcel Bot
+
+## Продакшн-сервер
+- **IP:** 176.223.129.98
+- **Доступ:** `ssh root@176.223.129.98` (ключ ~/.ssh/id_ed25519)
+- **Деплой:** push в main → CI/CD автоматически пересобирает и делает graceful restart
+
+### Контейнеры на сервере
+| Контейнер | Описание | Порт |
+|-----------|----------|------|
+| `parcel_bot_api` | FastAPI backend | 8091→8000 |
+| `parcel_bot_tg` | Telegram Bot (aiogram) | — |
+| `parcel_bot_webapp` | Vue 3 Mini App | 8092→80 |
+| `parcel_bot_db` | PostgreSQL 16 | 5432 (internal) |
+| `parcel_bot_redis` | Redis 7 | 6379 (internal) |
+
+### Команды проверки на сервере
+```bash
+# Подключение к серверу
+ssh root@176.223.129.98
+
+# Статус всех контейнеров parcel_bot
+docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep parcel
+
+# Логи контейнера (последние 50 строк)
+docker logs parcel_bot_api --tail=50
+docker logs parcel_bot_tg --tail=50
+
+# Перезапуск контейнера
+docker restart parcel_bot_api
+docker restart parcel_bot_tg
+
+# Полный рестарт всех контейнеров
+cd /root/parcel_bot && docker-compose down && docker-compose up -d
+```
+
+## Команды разработки (локально)
 ```bash
 # WebApp dev server
 cd webapp && npm run dev

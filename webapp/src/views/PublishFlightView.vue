@@ -212,7 +212,7 @@ const submitFlight = async () => {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -231,17 +231,17 @@ const submitFlight = async () => {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #2C2C2E;
-  border: 1px solid #3A3A3C;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
-  color: #fff;
+  color: var(--text-1);
   font-size: 14px;
   cursor: pointer;
   text-align: left;
 }
 
 .route-input .placeholder {
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 /* Точки маршрута */
@@ -252,17 +252,17 @@ const submitFlight = async () => {
   flex-shrink: 0;
 }
 
-.dot-green { background: #30D158; }
-.dot-red { background: #FF453A; }
+.dot-green { background: var(--success); }
+.dot-red { background: var(--danger); }
 
 /* Кнопка обмена городов */
 .swap-btn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2C2C2E;
-  border: 1px solid #3A3A3C;
-  color: #8E8E93;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
   font-size: 16px;
   cursor: pointer;
   flex-shrink: 0;
@@ -281,7 +281,7 @@ const submitFlight = async () => {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #8E8E93;
+  color: var(--text-2);
   font-size: 16px;
   font-weight: 600;
 }
@@ -306,5 +306,4 @@ const submitFlight = async () => {
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-</style>
+}</style>

@@ -6,6 +6,9 @@ import { useTelegram } from '@/composables/useTelegram'
 import { useAuthStore } from '@/stores/auth'
 import { useFlightsStore } from '@/stores/flights'
 import { useParcelsStore } from '@/stores/parcels'
+import { matchesApi } from '@/api/matches'
+import { walletApi } from '@/api/wallet'
+import { flightsApi } from '@/api/flights'
 import RouteCard from '@/components/shared/RouteCard.vue'
 import CityPicker from '@/components/shared/CityPicker.vue'
 
@@ -23,20 +26,18 @@ const role = computed(() => authStore.role)
 const fromCity = ref('')
 const toCity = ref('')
 
+// Сколько входящих заявок ждёт ответа (для перевозчика)
+const incomingCount = ref(null)
+
+// Баланс в звёздах для карточки кабинета
+const balanceStars = ref(null)
+
 // City picker
 const showCityPicker = ref(false)
 const cityPickerTarget = ref('from') // 'from' или 'to'
 
-// Популярные маршруты (загружаются из API поиска рейсов)
-const popularRoutes = computed(() => {
-  // Формируем список популярных маршрутов из результатов поиска
-  return flightsStore.searchResults.slice(0, 6).map((flight, index) => ({
-    id: flight.id || index + 1,
-    from_city: flight.from_city,
-    to_city: flight.to_city,
-    travelers_count: flight.requests_count || 0,
-  }))
-})
+// Популярные маршруты — считаются на бэкенде по числу активных рейсов
+const popularRoutes = ref([])
 
 // Мои рейсы (для перевозчика) — из store
 const myFlights = computed(() => flightsStore.myFlights)
@@ -81,6 +82,17 @@ const findTravelers = () => {
   }
 }
 
+// Опубликовать посылку, не выбирая перевозчика. Для отправителя бесплатно:
+// заявка ложится в общий поиск, перевозчики откликаются сами.
+const publishParcel = () => {
+  // Маршрут не обязателен: города можно выбрать прямо на экране публикации
+  haptic.impact('light')
+  router.push({
+    name: 'send-parcel',
+    query: { from: fromCity.value || undefined, to: toCity.value || undefined },
+  })
+}
+
 // Выбор маршрута из популярных
 const selectRoute = (route) => {
   haptic.impact('light')
@@ -104,16 +116,35 @@ const userName = computed(() => {
 onMounted(async () => {
   // Загрузить данные при монтировании в зависимости от роли
   if (role.value === 'sender') {
-    // Для отправителя: загружаем популярные маршруты (публичный)
+    // Для отправителя: популярные маршруты (публичные)
     // и посылки (только если авторизован)
-    const tasks = [flightsStore.searchFlights()]
+    const tasks = [
+      flightsStore.searchFlights(),
+      flightsApi.getPopularRoutes(6)
+        .then((data) => { popularRoutes.value = data.items || [] })
+        // Пустой блок лучше, чем сломанная главная
+        .catch(() => { popularRoutes.value = [] }),
+    ]
     if (authStore.isAuthenticated) {
       tasks.push(parcelsStore.fetchMyParcels({ status: 'active' }))
     }
     await Promise.all(tasks)
   } else if (authStore.isAuthenticated) {
-    // Для перевозчика: загружаем мои рейсы (требует авторизации)
+    // Для перевозчика: рейсы и счётчик входящих заявок
     await flightsStore.fetchMyFlights()
+    try {
+      const data = await matchesApi.getIncoming()
+      incomingCount.value = data.total || 0
+    } catch {
+      // Счётчик не критичен — молча оставляем прочерк
+      incomingCount.value = null
+    }
+    try {
+      const wallet = await walletApi.get()
+      balanceStars.value = wallet.balance_stars
+    } catch {
+      balanceStars.value = null
+    }
   }
 })
 </script>
@@ -159,6 +190,19 @@ onMounted(async () => {
 
     <!-- ===== КОНТЕНТ ОТПРАВИТЕЛЯ ===== -->
     <div v-if="role === 'sender'" class="role-content">
+      <!-- Главное действие отправителя: опубликовать посылку.
+           Стоит первым и выделено цветом — от числа отправителей зависит,
+           придут ли перевозчики. Поиск попутчиков идёт следующим шагом. -->
+      <div class="publish-parcel-card" @click="publishParcel">
+        <span class="publish-parcel-icon">📦</span>
+        <div class="publish-parcel-text">
+          <div class="publish-parcel-title">{{ t('publish_parcel') }}</div>
+          <div class="publish-parcel-sub">{{ t('publish_parcel_sub') }}</div>
+          <div class="publish-parcel-desc">{{ t('publish_parcel_desc') }}</div>
+        </div>
+        <span class="publish-parcel-arrow">›</span>
+      </div>
+
       <!-- Селектор маршрута -->
       <div class="card route-selector">
         <span class="route-label">{{ t('route_label') }}</span>
@@ -193,13 +237,14 @@ onMounted(async () => {
         </button>
       </div>
 
+
       <!-- Популярные маршруты -->
       <div class="section">
         <h2 class="section-title">{{ t('popular_routes') }}</h2>
         <div class="routes-list">
           <RouteCard
             v-for="r in popularRoutes"
-            :key="r.id"
+            :key="`${r.from_city}-${r.to_city}`"
             :route="r"
             @select="selectRoute"
           />
@@ -216,6 +261,30 @@ onMounted(async () => {
           <div class="publish-title">{{ t('publish_flight') }}</div>
           <div class="publish-desc">{{ t('publish_flight_desc') }}</div>
         </div>
+      </div>
+
+      <!-- Входящие заявки -->
+      <div class="card subscription-card" @click="router.push('/requests')">
+        <span class="sub-icon">📩</span>
+        <div class="sub-info">
+          <div class="sub-title">{{ t('incoming_requests') }}</div>
+          <div class="sub-status">
+            {{ incomingCount ? t('requests_count', { count: incomingCount }) : t('requests_empty') }}
+          </div>
+        </div>
+        <span class="route-arrow">›</span>
+      </div>
+
+      <!-- Кабинет: баланс в звёздах -->
+      <div class="card subscription-card" @click="router.push('/wallet')">
+        <span class="sub-icon">⭐</span>
+        <div class="sub-info">
+          <div class="sub-title">{{ t('wallet_title') }}</div>
+          <div class="sub-status">
+            {{ balanceStars !== null ? `${balanceStars} ⭐` : t('loading') }}
+          </div>
+        </div>
+        <span class="route-arrow">›</span>
       </div>
 
       <!-- Подписка -->
@@ -257,6 +326,62 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* Главное действие отправителя. Акцентная заливка, чтобы притягивать взгляд:
+   спрос первичен, без посылок перевозчикам нечего возить. */
+.publish-parcel-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  box-shadow: 0 6px 18px rgba(108, 92, 231, 0.28);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.publish-parcel-card:active {
+  transform: scale(0.98);
+}
+
+.publish-parcel-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.publish-parcel-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.publish-parcel-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--on-accent);
+  line-height: 1.2;
+}
+
+.publish-parcel-sub {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 1px;
+}
+
+.publish-parcel-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.publish-parcel-arrow {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
 .home-page {
   padding: 16px;
 }
@@ -271,13 +396,13 @@ onMounted(async () => {
 
 .welcome-text {
   font-size: 14px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .app-title {
   font-size: 28px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-1);
   margin-top: 2px;
 }
 
@@ -302,14 +427,14 @@ onMounted(async () => {
   right: 2px;
   width: 8px;
   height: 8px;
-  background: #FF453A;
+  background: var(--danger);
   border-radius: 50%;
 }
 
 .avatar-header {
   width: 38px;
   height: 38px;
-  background: #6C5CE7;
+  background: var(--primary);
   font-size: 15px;
   cursor: pointer;
 }
@@ -329,15 +454,15 @@ onMounted(async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid #2C2C2E;
+  border: 1px solid var(--border);
   background: transparent;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .role-btn.active {
-  background: #6C5CE7;
-  border-color: #6C5CE7;
-  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-accent);
 }
 
 .role-btn:active {
@@ -352,7 +477,7 @@ onMounted(async () => {
 .route-label {
   font-size: 12px;
   font-weight: 600;
-  color: #8E8E93;
+  color: var(--text-2);
   letter-spacing: 0.5px;
   display: block;
   margin-bottom: 10px;
@@ -371,17 +496,17 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #2C2C2E;
-  border: 1px solid #3A3A3C;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
-  color: #fff;
+  color: var(--text-1);
   font-size: 14px;
   cursor: pointer;
   text-align: left;
 }
 
 .route-input .placeholder {
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .dot {
@@ -391,16 +516,16 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.dot-green { background: #30D158; }
-.dot-red { background: #FF453A; }
+.dot-green { background: var(--success); }
+.dot-red { background: var(--danger); }
 
 .swap-btn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2C2C2E;
-  border: 1px solid #3A3A3C;
-  color: #8E8E93;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
   font-size: 16px;
   cursor: pointer;
   flex-shrink: 0;
@@ -417,7 +542,7 @@ onMounted(async () => {
 .section-title {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   margin-bottom: 12px;
 }
 
@@ -433,7 +558,7 @@ onMounted(async () => {
   align-items: center;
   gap: 14px;
   padding: 20px;
-  background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   border-radius: 16px;
   cursor: pointer;
   margin-bottom: 12px;
@@ -451,7 +576,7 @@ onMounted(async () => {
 .publish-title {
   font-size: 17px;
   font-weight: 700;
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .publish-desc {
@@ -480,18 +605,18 @@ onMounted(async () => {
 .sub-title {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .sub-status {
   font-size: 13px;
-  color: #30D158;
+  color: var(--success);
   margin-top: 2px;
 }
 
 .route-arrow {
   font-size: 20px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 /* Рейс */
@@ -508,12 +633,12 @@ onMounted(async () => {
 .flight-route {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .flight-date {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .flight-bottom {
@@ -525,6 +650,5 @@ onMounted(async () => {
 
 .flight-kg {
   font-size: 13px;
-  color: #8E8E93;
-}
-</style>
+  color: var(--text-2);
+}</style>

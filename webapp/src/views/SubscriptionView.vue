@@ -259,13 +259,13 @@ const payWithTon = async () => {
 
 .active-title {
   font-size: 13px;
-  color: #30D158;
+  color: var(--success);
 }
 
 .active-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 /* Список планов */
@@ -280,8 +280,8 @@ const payWithTon = async () => {
 .plan-card {
   position: relative;
   padding: 16px;
-  background: #1C1C1E;
-  border: 2px solid #2C2C2E;
+  background: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s;
@@ -292,12 +292,12 @@ const payWithTon = async () => {
 }
 
 .plan-card.selected {
-  border-color: #6C5CE7;
+  border-color: var(--primary);
   background: rgba(108, 92, 231, 0.08);
 }
 
 .plan-card.popular {
-  border-color: #6C5CE7;
+  border-color: var(--primary);
 }
 
 /* Бейдж "Популярный" */
@@ -306,11 +306,11 @@ const payWithTon = async () => {
   top: -10px;
   right: 14px;
   padding: 3px 10px;
-  background: #6C5CE7;
+  background: var(--primary);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #fff;
+  color: var(--on-accent);
   letter-spacing: 0.3px;
 }
 
@@ -334,12 +334,12 @@ const payWithTon = async () => {
 .plan-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .plan-period {
   font-size: 12px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-top: 1px;
 }
 
@@ -351,14 +351,14 @@ const payWithTon = async () => {
 .price-amount {
   font-size: 22px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .price-discount {
   display: block;
   font-size: 11px;
   font-weight: 600;
-  color: #30D158;
+  color: var(--success);
   margin-top: 1px;
 }
 
@@ -366,7 +366,7 @@ const payWithTon = async () => {
 .plan-features {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #2C2C2E;
+  border-top: 1px solid var(--border);
 }
 
 .feature-item {
@@ -375,11 +375,11 @@ const payWithTon = async () => {
   gap: 8px;
   padding: 4px 0;
   font-size: 13px;
-  color: #C7C7CC;
+  color: var(--text-3);
 }
 
 .feature-check {
-  color: #6C5CE7;
+  color: var(--primary);
   font-weight: 700;
   font-size: 14px;
 }
@@ -428,7 +428,7 @@ const payWithTon = async () => {
 /* Кнопка TON */
 .btn-ton {
   background: #0098EA;
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -437,5 +437,4 @@ const payWithTon = async () => {
 
 .btn-ton:active:not(:disabled) {
   opacity: 0.85;
-}
-</style>
+}</style>

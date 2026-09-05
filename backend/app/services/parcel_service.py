@@ -1,6 +1,7 @@
 import logging
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from backend.app.services import moderation_service, notification_service
 from shared.models.parcel import Parcel, ParcelStatus, ParcelSize
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,9 @@ async def create_parcel(
         sender_id, from_city, to_city, weight, price,
     )
 
+    # Запрещённое вложение отсекаем до записи в базу — перевозчик рискует на границе
+    moderation_service.ensure_allowed(description)
+
     # Создаём запись в БД
     parcel = Parcel(
         sender_id=sender_id,
@@ -38,6 +42,9 @@ async def create_parcel(
     session.add(parcel)
     await session.commit()
     await session.refresh(parcel)
+
+    # Если подходящие рейсы уже опубликованы — отправитель узнаёт об этом сразу
+    await notification_service.notify_matches_for_new_parcel(session, parcel)
 
     logger.info("[PARCEL] Создана: parcel_id=%s", parcel.id)
     return parcel
@@ -128,60 +135,6 @@ async def accept_parcel(
     await session.refresh(parcel)
 
     logger.info("[PARCEL] Принята: parcel=%s, traveler=%s", parcel_id, traveler_id)
-    return parcel
-
-
-async def update_parcel_status(
-    session: AsyncSession,
-    parcel_id: int,
-    new_status: str,
-    actor_id: int,
-) -> Parcel:
-    """Обновить статус посылки с проверкой прав."""
-    parcel = await get_parcel_by_id(session, parcel_id)
-    if not parcel:
-        raise ValueError("Parcel not found")
-
-    # Проверяем что actor — участник (отправитель или перевозчик)
-    if actor_id not in (parcel.sender_id, parcel.traveler_id):
-        raise ValueError("Not authorized")
-
-    # Валидация переходов статуса с привязкой к роли
-    # ACCEPTED→HANDED: перевозчик подтверждает получение посылки
-    # HANDED→IN_TRANSIT: перевозчик начинает перевозку
-    # IN_TRANSIT→DELIVERED: отправитель подтверждает получение
-    valid_transitions = {
-        ParcelStatus.ACCEPTED: [ParcelStatus.HANDED],
-        ParcelStatus.HANDED: [ParcelStatus.IN_TRANSIT],
-        ParcelStatus.IN_TRANSIT: [ParcelStatus.DELIVERED],
-    }
-
-    # Роль, которая может выполнить переход
-    role_for_transition = {
-        (ParcelStatus.ACCEPTED, ParcelStatus.HANDED): parcel.traveler_id,
-        (ParcelStatus.HANDED, ParcelStatus.IN_TRANSIT): parcel.traveler_id,
-        (ParcelStatus.IN_TRANSIT, ParcelStatus.DELIVERED): parcel.sender_id,
-    }
-
-    try:
-        target_status = ParcelStatus(new_status)
-    except ValueError:
-        raise ValueError(f"Invalid status: {new_status}")
-
-    allowed = valid_transitions.get(parcel.status, [])
-    if target_status not in allowed:
-        raise ValueError(f"Cannot transition from {parcel.status.value} to {new_status}")
-
-    # Проверяем что переход выполняет правильная сторона
-    required_actor = role_for_transition.get((parcel.status, target_status))
-    if required_actor and actor_id != required_actor:
-        raise ValueError("Not authorized for this transition")
-
-    parcel.status = target_status
-    await session.commit()
-    await session.refresh(parcel)
-
-    logger.info("[PARCEL] Статус обновлён: parcel=%s, status=%s", parcel_id, new_status)
     return parcel
 
 

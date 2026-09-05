@@ -159,7 +159,7 @@ onMounted(() => {
   display: flex;
   gap: 4px;
   padding: 0 16px 16px;
-  background: #1C1C1E;
+  background: var(--surface);
   border-radius: 10px;
   margin: 0 16px 16px;
 }
@@ -174,12 +174,12 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s;
   background: transparent;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .tab-btn.active {
-  background: #6C5CE7;
-  color: #fff;
+  background: var(--primary);
+  color: var(--on-accent);
 }
 
 .tab-btn:active {
@@ -216,7 +216,7 @@ onMounted(() => {
 .parcel-route {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
 }
 
 /* Бейдж статуса */
@@ -230,7 +230,7 @@ onMounted(() => {
 /* Описание посылки */
 .parcel-desc {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -246,13 +246,13 @@ onMounted(() => {
 
 .parcel-weight {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .parcel-price {
   font-size: 15px;
   font-weight: 700;
-  color: #6C5CE7;
+  color: var(--primary);
 }
 
 /* Скелетон загрузки */
@@ -274,7 +274,7 @@ onMounted(() => {
 
 .error-text {
   font-size: 15px;
-  color: #FF453A;
+  color: var(--danger);
   margin-bottom: 20px;
 }
 
@@ -292,7 +292,6 @@ onMounted(() => {
 
 .empty-text {
   font-size: 15px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-bottom: 20px;
-}
-</style>
+}</style>

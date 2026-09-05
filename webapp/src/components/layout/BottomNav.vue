@@ -53,14 +53,17 @@ const navigate = (path) => {
   bottom: 0;
   left: 0;
   right: 0;
+  /* Совпадает с шириной .app-container */
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-around;
   align-items: center;
   height: 72px;
   padding-bottom: env(safe-area-inset-bottom, 8px);
-  background: rgba(28, 28, 30, 0.95);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
-  border-top: 1px solid #2C2C2E;
+  border-top: 1px solid var(--border);
   z-index: 100;
 }
 
@@ -85,11 +88,10 @@ const navigate = (path) => {
 .nav-label {
   font-size: 10px;
   font-weight: 500;
-  color: #8E8E93;
+  color: var(--text-2);
   transition: color 0.2s;
 }
 
 .nav-item.active .nav-label {
-  color: #6C5CE7;
-}
-</style>
+  color: var(--primary);
+}</style>

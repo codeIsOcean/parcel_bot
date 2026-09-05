@@ -136,7 +136,7 @@ const submitCustomCity = () => {
 .modal-content {
   width: 100%;
   max-height: 80vh;
-  background: #1C1C1E;
+  background: var(--surface);
   border-radius: 16px 16px 0 0;
   padding: 20px 16px;
   overflow-y: auto;
@@ -152,16 +152,16 @@ const submitCustomCity = () => {
 .modal-header h3 {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .close-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #2C2C2E;
+  background: var(--surface-2);
   border: none;
-  color: #8E8E93;
+  color: var(--text-2);
   font-size: 14px;
   cursor: pointer;
   display: flex;
@@ -194,7 +194,7 @@ const submitCustomCity = () => {
 }
 
 .city-item:active {
-  background: #2C2C2E;
+  background: var(--surface-2);
 }
 
 .city-flag {
@@ -203,11 +203,11 @@ const submitCustomCity = () => {
 
 .city-name {
   font-size: 16px;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .city-other .city-name {
-  color: #6C5CE7;
+  color: var(--primary);
 }
 
 .custom-city-input {
@@ -222,5 +222,4 @@ const submitCustomCity = () => {
 
 .custom-city-input .btn {
   flex-shrink: 0;
-}
-</style>
+}</style>

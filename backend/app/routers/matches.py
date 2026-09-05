@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.database import get_session
 from backend.app.dependencies import get_current_user
-from backend.app.services import match_service
+from backend.app.services import access_service, match_service
 from shared.models.user import User
 
 
@@ -35,6 +35,19 @@ async def create_match(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/incoming")
+async def get_incoming_requests(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Входящие заявки по всем активным рейсам перевозчика."""
+    # Заявки отдаём всегда, право ответить приходит отдельным полем access
+    groups = await match_service.get_incoming_requests(session, user.id)
+    total = sum(len(g["requests"]) for g in groups)
+    # Доступ теперь дневной, поэтому он общий для всех рейсов перевозчика
+    return {"items": groups, "total": total, "access": access_service.access_state(user)}
+
+
 @router.get("/flight/{flight_id}")
 async def get_flight_requests(
     flight_id: int,
@@ -54,7 +67,14 @@ async def get_flight_requests(
         raise HTTPException(status_code=403, detail="Not your flight")
 
     requests, total = await match_service.get_flight_requests(session, flight_id, page, limit)
-    return {"items": requests, "total": total, "page": page, "limit": limit}
+    # Заявки перевозчик видит всегда, а право ответить зависит от оплаты дня
+    return {
+        "items": requests,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "access": access_service.access_state(user),
+    }
 
 
 @router.post("/{match_id}/accept")

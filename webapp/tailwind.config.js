@@ -7,20 +7,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Основные цвета из прототипа
-        primary: '#6C5CE7',
-        'primary-light': '#A29BFE',
-        accent: '#30D158',
-        danger: '#FF453A',
-        warning: '#FFD60A',
+        // Всё тянется из CSS-переменных в assets/main.css — единый источник палитры
+        primary: 'var(--primary)',
+        'primary-light': 'var(--primary-light)',
+        'primary-soft': 'var(--primary-soft)',
+        accent: 'var(--success)',
+        danger: 'var(--danger)',
+        warning: 'var(--warning)',
         // Фоны
-        'bg-primary': 'var(--tg-theme-bg-color, #000000)',
-        'bg-secondary': 'var(--tg-theme-secondary-bg-color, #1C1C1E)',
-        'bg-tertiary': '#2C2C2E',
+        'bg-primary': 'var(--bg)',
+        'bg-secondary': 'var(--surface)',
+        'bg-tertiary': 'var(--surface-2)',
+        border: 'var(--border)',
         // Текст
-        'text-primary': 'var(--tg-theme-text-color, #FFFFFF)',
-        'text-secondary': 'var(--tg-theme-hint-color, #8E8E93)',
-        'text-link': 'var(--tg-theme-link-color, #6C5CE7)',
+        'text-primary': 'var(--text-1)',
+        'text-secondary': 'var(--text-2)',
+        'text-muted': 'var(--text-3)',
+        'text-link': 'var(--primary)',
       },
       fontFamily: {
         sans: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],

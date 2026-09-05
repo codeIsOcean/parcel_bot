@@ -188,13 +188,13 @@ const goHome = () => {
 .delivery-route {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-1);
   margin-bottom: 4px;
 }
 
 .delivery-traveler {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 /* Секция рейтинга */
@@ -208,7 +208,7 @@ const goHome = () => {
 .rating-title {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   margin-bottom: 16px;
 }
 
@@ -216,7 +216,7 @@ const goHome = () => {
 .rating-hint {
   margin-top: 10px;
   font-size: 14px;
-  color: #6C5CE7;
+  color: var(--primary);
   font-weight: 500;
 }
 
@@ -229,7 +229,7 @@ const goHome = () => {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -268,14 +268,13 @@ const goHome = () => {
 .success-title {
   font-size: 22px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
   margin-bottom: 8px;
 }
 
 .success-text {
   font-size: 14px;
-  color: #8E8E93;
+  color: var(--text-2);
   margin-bottom: 32px;
   line-height: 1.4;
-}
-</style>
+}</style>

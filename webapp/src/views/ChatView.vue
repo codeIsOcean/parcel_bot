@@ -55,6 +55,9 @@ const scrollToBottom = async () => {
   }
 }
 
+// Сообщение о том, что ответ закрыт до оплаты публикации
+const lockedNotice = ref('')
+
 // Отправка текстового сообщения
 const sendMessage = async () => {
   const text = messageText.value.trim()
@@ -62,11 +65,18 @@ const sendMessage = async () => {
 
   haptic.impact('light')
   messageText.value = ''
+  lockedNotice.value = ''
 
   try {
     await chatsStore.sendMessage(props.id, text)
     scrollToBottom()
   } catch (e) {
+    // 402 — публикация рейса не оплачена, объясняем причину вместо молчания
+    if (e?.response?.status === 402) {
+      lockedNotice.value = t('day_locked_hint', { price: e.response?.data?.price_stars ?? '' })
+      // Возвращаем текст в поле, чтобы человек не потерял написанное
+      messageText.value = text
+    }
     haptic.notification('error')
   }
 }
@@ -229,6 +239,7 @@ onUnmounted(() => {
     </Transition>
 
     <!-- Нижняя панель ввода сообщения -->
+    <div v-if="lockedNotice" class="locked-notice">🔒 {{ lockedNotice }}</div>
     <div class="input-bar">
       <!-- Кнопка предложения цены -->
       <button class="action-btn" @click="showPriceOffer = !showPriceOffer">
@@ -257,24 +268,35 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Причина, по которой ответ заблокирован */
+.locked-notice {
+  margin: 0 12px 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .chat-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #000;
+  background: var(--bg);
 }
 
 /* Баннер информации о посылке */
 .parcel-banner {
   padding: 10px 16px;
-  background: #1C1C1E;
-  border-bottom: 1px solid #2C2C2E;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .banner-route {
   font-size: 13px;
   font-weight: 600;
-  color: #6C5CE7;
+  color: var(--primary);
   margin-bottom: 2px;
 }
 
@@ -283,12 +305,12 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .banner-price {
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
 }
 
 /* Контейнер сообщений (скроллируемый) */
@@ -322,7 +344,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8E8E93;
+  color: var(--text-2);
   font-size: 14px;
 }
 
@@ -348,18 +370,18 @@ onUnmounted(() => {
 }
 
 .message.mine .message-bubble {
-  background: #6C5CE7;
+  background: var(--primary);
   border-bottom-right-radius: 4px;
 }
 
 .message.theirs .message-bubble {
-  background: #2C2C2E;
+  background: var(--surface-2);
   border-bottom-left-radius: 4px;
 }
 
 .message-text {
   font-size: 14px;
-  color: #fff;
+  color: var(--text-1);
   word-wrap: break-word;
   line-height: 1.4;
 }
@@ -367,16 +389,25 @@ onUnmounted(() => {
 .message-time {
   display: block;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-3);
   text-align: right;
   margin-top: 2px;
+}
+
+/* Свой пузырёк залит фиолетовым — текст на нём белый */
+.message.mine .message-text {
+  color: var(--on-accent);
+}
+
+.message.mine .message-time {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 /* Панель предложения цены */
 .price-offer-panel {
   padding: 16px;
-  background: #1C1C1E;
-  border-top: 1px solid #2C2C2E;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
   border-radius: 16px 16px 0 0;
 }
 
@@ -390,16 +421,16 @@ onUnmounted(() => {
 .offer-title {
   font-size: 16px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .offer-close {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #2C2C2E;
+  background: var(--surface-2);
   border: none;
-  color: #8E8E93;
+  color: var(--text-2);
   font-size: 12px;
   cursor: pointer;
   display: flex;
@@ -419,9 +450,9 @@ onUnmounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #2C2C2E;
-  border: 1px solid #3A3A3C;
-  color: #fff;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text-1);
   font-size: 20px;
   font-weight: 700;
   cursor: pointer;
@@ -431,13 +462,13 @@ onUnmounted(() => {
 }
 
 .price-btn:active {
-  background: #3A3A3C;
+  background: var(--surface-3);
 }
 
 .offer-price {
   font-size: 32px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-1);
   min-width: 80px;
   text-align: center;
 }
@@ -460,8 +491,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #1C1C1E;
-  border-top: 1px solid #2C2C2E;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
   /* Отступ для безопасной зоны (iPhone) */
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
@@ -471,7 +502,7 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2C2C2E;
+  background: var(--surface-2);
   border: none;
   font-size: 16px;
   cursor: pointer;
@@ -485,20 +516,20 @@ onUnmounted(() => {
 .message-input {
   flex: 1;
   padding: 9px 14px;
-  background: #2C2C2E;
-  border: 1px solid #3A3A3C;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
   border-radius: 20px;
-  color: #fff;
+  color: var(--text-1);
   font-size: 14px;
   outline: none;
 }
 
 .message-input::placeholder {
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .message-input:focus {
-  border-color: #6C5CE7;
+  border-color: var(--primary);
 }
 
 /* Кнопка отправки */
@@ -506,9 +537,9 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #3A3A3C;
+  background: var(--surface-3);
   border: none;
-  color: #8E8E93;
+  color: var(--text-2);
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
@@ -520,11 +551,10 @@ onUnmounted(() => {
 }
 
 .send-btn.active {
-  background: #6C5CE7;
-  color: #fff;
+  background: var(--primary);
+  color: var(--on-accent);
 }
 
 .send-btn:disabled {
   cursor: not-allowed;
-}
-</style>
+}</style>

@@ -5,8 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.database import get_session
 from backend.app.dependencies import get_current_user
-from backend.app.schemas.parcels import ParcelCreate, ParcelResponse, PaginatedParcels
-from backend.app.services import parcel_service
+from backend.app.schemas.parcels import (
+    DeliveryConfirmRequest, DeliveryStepRequest,
+    ParcelCreate, ParcelResponse, PaginatedParcels,
+)
+from backend.app.services import delivery_service, media_service, parcel_service
+from backend.app.services.delivery_service import DeliveryError
 from shared.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -79,20 +83,107 @@ async def get_parcel(
     return await _enrich_parcel_response(session, parcel)
 
 
-@router.post("/{parcel_id}/status", response_model=ParcelResponse)
-async def update_parcel_status(
+@router.get("/{parcel_id}/tracking")
+async def get_tracking(
     parcel_id: int,
-    new_status: str = Query(..., description="handed / in_transit / delivered"),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """Обновить статус посылки (accepted→handed→in_transit→delivered)."""
+    """Отслеживание посылки: этапы, код выдачи и доступные действия."""
+    parcel = await parcel_service.get_parcel_by_id(session, parcel_id)
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcel not found")
+
+    # Видеть отслеживание могут только участники сделки
+    if user.id not in (parcel.sender_id, parcel.traveler_id):
+        raise HTTPException(status_code=403, detail="Not a participant of this parcel")
+
+    is_traveler = user.id == parcel.traveler_id
+    status = parcel.status.value
+
+    return {
+        "parcel": (await _enrich_parcel_response(session, parcel)).model_dump(),
+        "timeline": delivery_service.timeline(parcel),
+        # Снимки по этапам — доказательство приёма и выдачи
+        "photos": {
+            "parcel": media_service.to_urls(parcel.photo_file_ids),
+            "handover": media_service.to_urls(parcel.handover_photo_file_ids),
+            "delivery": media_service.to_urls(parcel.delivery_photo_file_ids),
+        },
+        # Код знает только отправитель — он называет его получателю
+        "handover_code": parcel.handover_code if user.id == parcel.sender_id else None,
+        "is_traveler": is_traveler,
+        # Что перевозчик может сделать прямо сейчас
+        "actions": {
+            "can_hand": is_traveler and status == "accepted",
+            "can_transit": is_traveler and status == "handed",
+            "can_arrive": is_traveler and status == "in_transit" and not parcel.arrived_at,
+            "can_deliver": is_traveler and status == "in_transit",
+        },
+    }
+
+
+@router.post("/{parcel_id}/handed", response_model=ParcelResponse)
+async def mark_handed(
+    parcel_id: int,
+    data: DeliveryStepRequest | None = None,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Перевозчик забрал посылку у отправителя."""
     try:
-        parcel = await parcel_service.update_parcel_status(
-            session, parcel_id, new_status, actor_id=user.id,
+        parcel = await delivery_service.mark_handed(
+            session, parcel_id, user.id,
+            photo_file_ids=data.photo_file_ids if data else None,
         )
         return await _enrich_parcel_response(session, parcel)
-    except ValueError as e:
+    except DeliveryError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{parcel_id}/transit", response_model=ParcelResponse)
+async def mark_in_transit(
+    parcel_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Перевозчик вылетел."""
+    try:
+        parcel = await delivery_service.mark_in_transit(session, parcel_id, user.id)
+        return await _enrich_parcel_response(session, parcel)
+    except DeliveryError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{parcel_id}/arrived", response_model=ParcelResponse)
+async def mark_arrived(
+    parcel_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Перевозчик прилетел в город назначения."""
+    try:
+        parcel = await delivery_service.mark_arrived(session, parcel_id, user.id)
+        return await _enrich_parcel_response(session, parcel)
+    except DeliveryError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{parcel_id}/delivered", response_model=ParcelResponse)
+async def mark_delivered(
+    parcel_id: int,
+    data: DeliveryConfirmRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Перевозчик закрывает доставку кодом получателя."""
+    try:
+        parcel = await delivery_service.mark_delivered(
+            session, parcel_id, user.id,
+            code=data.code, photo_file_ids=data.photo_file_ids,
+        )
+        return await _enrich_parcel_response(session, parcel)
+    except DeliveryError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 

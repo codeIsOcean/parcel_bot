@@ -95,6 +95,17 @@ const logout = () => {
         </div>
       </div>
 
+      <!-- Карточка: Поддержка -->
+      <div class="card settings-card">
+        <div class="setting-row" @click="router.push('/support')">
+          <div class="setting-info">
+            <span class="setting-icon">🆘</span>
+            <span class="setting-label">{{ t('support_title') }}</span>
+          </div>
+          <span class="setting-arrow">›</span>
+        </div>
+      </div>
+
       <!-- Карточка: Предложить маршрут -->
       <div class="card settings-card">
         <div class="setting-row" @click="suggestRoute">
@@ -142,7 +153,7 @@ const logout = () => {
 .card-title {
   font-size: 13px;
   font-weight: 600;
-  color: #8E8E93;
+  color: var(--text-2);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   margin-bottom: 12px;
@@ -162,15 +173,15 @@ const logout = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid #3A3A3C;
+  border: 1px solid var(--border-strong);
   background: transparent;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .lang-btn.active {
-  background: #6C5CE7;
-  border-color: #6C5CE7;
-  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-accent);
 }
 
 .lang-btn:active {
@@ -198,17 +209,17 @@ const logout = () => {
 
 .setting-label {
   font-size: 15px;
-  color: #fff;
+  color: var(--text-1);
 }
 
 .setting-arrow {
   font-size: 20px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 .setting-value {
   font-size: 13px;
-  color: #8E8E93;
+  color: var(--text-2);
 }
 
 /* Тогл-переключатель */
@@ -216,21 +227,22 @@ const logout = () => {
   width: 48px;
   height: 28px;
   border-radius: 14px;
-  background: #3A3A3C;
+  background: var(--surface-3);
   padding: 2px;
   cursor: pointer;
   transition: background 0.25s;
 }
 
 .toggle.active {
-  background: #6C5CE7;
+  background: var(--primary);
 }
 
 .toggle-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(20, 22, 26, 0.25);
   transition: transform 0.25s;
 }
 
@@ -241,8 +253,8 @@ const logout = () => {
 /* Кнопка выхода */
 .btn-danger {
   background: transparent;
-  border: 1px solid #FF453A;
-  color: #FF453A;
+  border: 1px solid var(--danger);
+  color: var(--danger);
   padding: 14px;
   border-radius: 12px;
   font-size: 15px;
@@ -257,5 +269,4 @@ const logout = () => {
 
 .logout-btn {
   margin-top: 24px;
-}
-</style>
+}</style>

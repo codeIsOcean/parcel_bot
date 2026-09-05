@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from backend.app.services import crosspost_service, notification_service
 from shared.models.flight import Flight, FlightStatus
 from shared.models.user import User
 
@@ -43,8 +44,48 @@ async def create_flight(
     await session.commit()
     await session.refresh(flight)
 
+    # Сразу сводим рейс с посылками, которые давно ждут этот маршрут
+    await notification_service.notify_matches_for_new_flight(session, flight)
+
+    # И разносим объявление по профильным чатам — один пост вместо ручной рассылки
+    await crosspost_service.announce_flight(session, flight)
+
     logger.info("[FLIGHT] Создан: flight_id=%s", flight.id)
     return flight
+
+
+async def get_popular_routes(session: AsyncSession, limit: int = 6) -> list[dict]:
+    """Маршруты с наибольшим числом активных рейсов.
+
+    Раньше на главной показывалось количество заявок на рейс, из-за чего
+    у каждого маршрута всегда стоял ноль. Считаем именно рейсы.
+    """
+    query = (
+        select(
+            Flight.from_city,
+            Flight.to_city,
+            func.count(Flight.id).label("travelers_count"),
+            func.min(Flight.price_per_kg).label("min_price"),
+        )
+        .where(
+            Flight.status == FlightStatus.ACTIVE,
+            Flight.flight_date >= date.today(),
+        )
+        .group_by(Flight.from_city, Flight.to_city)
+        .order_by(func.count(Flight.id).desc())
+        .limit(limit)
+    )
+
+    rows = (await session.execute(query)).all()
+    return [
+        {
+            "from_city": row.from_city,
+            "to_city": row.to_city,
+            "travelers_count": row.travelers_count,
+            "min_price": row.min_price,
+        }
+        for row in rows
+    ]
 
 
 async def search_flights(

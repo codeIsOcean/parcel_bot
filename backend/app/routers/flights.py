@@ -3,6 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.config import settings
 from backend.app.database import get_session
 from backend.app.dependencies import get_current_user
 from backend.app.schemas.flights import FlightCreate, FlightResponse, PaginatedFlights
@@ -67,6 +68,16 @@ async def search_flights(
         page=page,
         limit=limit,
     )
+
+
+@router.get("/popular-routes")
+async def get_popular_routes(
+    limit: int = Query(6, ge=1, le=20),
+    session: AsyncSession = Depends(get_session),
+):
+    """Популярные маршруты: сколько активных рейсов идёт по каждому."""
+    items = await flight_service.get_popular_routes(session, limit=limit)
+    return {"items": items}
 
 
 @router.get("/my", response_model=PaginatedFlights)

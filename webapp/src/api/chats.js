@@ -27,4 +27,10 @@ export const chatsApi = {
    */
   offerPrice: (chatId, price) =>
     api.post(`/chats/${chatId}/offer`, { price }),
+
+  /**
+   * Открыть переписку по посылке. Если чат уже есть — вернётся он же.
+   */
+  start: (parcelId) =>
+    api.post('/chats/start', { parcel_id: parcelId }),
 }

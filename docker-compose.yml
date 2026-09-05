@@ -58,6 +58,8 @@ services:
       - ./backend:/app/backend
       - ./alembic:/app/alembic
       - ./alembic.ini:/app/alembic.ini
+      # Загруженные фотографии посылок переживают пересборку
+      - mediadata:/app/media
 
   # === Telegram Bot ===
   bot:
@@ -97,3 +99,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  mediadata:

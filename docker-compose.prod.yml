@@ -44,6 +44,9 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres:5432/parcel_bot
       REDIS_URL: redis://redis:6379/0
+    volumes:
+      # Загруженные фотографии посылок переживают пересборку образа
+      - mediadata:/app/media
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,6 +87,7 @@ services:
 volumes:
   pgdata:
   redisdata:
+  mediadata:
 
 networks:
   internal:

@@ -12,7 +12,7 @@ const { initLang } = useLocale()
 const authStore = useAuthStore()
 
 // Страницы без BottomNav (чат, отправка, публикация и т.д.)
-const pagesWithoutNav = ['chat', 'send-parcel', 'publish-flight', 'rate', 'tracking']
+const pagesWithoutNav = ['chat', 'send-parcel', 'publish-flight', 'rate', 'tracking', 'support']
 
 onMounted(async () => {
   // Инициализация Telegram WebApp
@@ -56,7 +56,8 @@ onMounted(async () => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  max-width: 100vw;
+  /* Mini App рассчитан на узкий вьюпорт телефона — на широких экранах центрируем */
+  max-width: 480px;
+  margin: 0 auto;
   overflow-x: hidden;
-}
-</style>
+}</style>

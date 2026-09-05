@@ -32,6 +32,24 @@ const routes = [
     component: () => import('@/views/ParcelsView.vue'),
   },
   {
+    // Входящие заявки перевозчика
+    path: '/requests',
+    name: 'requests',
+    component: () => import('@/views/RequestsView.vue'),
+  },
+  {
+    // Кабинет: баланс и пополнение
+    path: '/wallet',
+    name: 'wallet',
+    component: () => import('@/views/WalletView.vue'),
+  },
+  {
+    // Чат с поддержкой
+    path: '/support',
+    name: 'support',
+    component: () => import('@/views/SupportView.vue'),
+  },
+  {
     path: '/tracking/:id',
     name: 'tracking',
     component: () => import('@/views/TrackingView.vue'),
