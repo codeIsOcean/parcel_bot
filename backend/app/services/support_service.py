@@ -1,8 +1,12 @@
 """Чат пользователя с администратором сервиса.
 
-Два входа в одну и ту же переписку: пользователь пишет из Mini App,
-администратор отвечает из Telegram. Сообщение сначала ложится в базу и только
-потом уходит пушем — так администратор никогда не увидит того, чего нет в базе.
+Три входа в одну и ту же переписку: пользователь пишет из Mini App,
+администратор отвечает из Telegram или из KVD Ads Panel (CRM). Сообщение
+сначала ложится в базу и только потом уходит пушем и копией в CRM — так
+администратор никогда не увидит того, чего нет в базе.
+
+Копии сообщений уходят в CRM через crm_bridge (после коммита). Ответ,
+пришедший ИЗ CRM (origin="crm"), обратно в CRM не зеркалится — петли нет.
 
 У одного пользователя одновременно живёт одно активное обращение: переписка
 не рассыпается на ветки, а администратор всегда отвечает в последнюю.
@@ -16,6 +20,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.config import settings
+from backend.app.services.crm_bridge import SENDER_OPERATOR, SENDER_USER, CrmEvent, crm_bridge
 from shared.locale.notify_texts import nt
 from shared.models.chat import SupportMessage, SupportSession
 from shared.models.user import User
@@ -26,6 +31,10 @@ logger = logging.getLogger(__name__)
 # Роли отправителей в переписке
 ROLE_USER = "user"
 ROLE_ADMIN = "admin"
+
+# Откуда пришёл ответ администратора: из бота или из CRM-панели
+ORIGIN_APP = "app"
+ORIGIN_CRM = "crm"
 
 
 class SupportUnavailable(Exception):
@@ -40,6 +49,53 @@ def _now() -> datetime:
 def admin_ids() -> list[int]:
     """Кому уходят обращения."""
     return settings.admin_id_list
+
+
+def primary_admin_id() -> int:
+    """От чьего имени пишутся ответы из CRM: первый администратор, иначе 0."""
+    ids = admin_ids()
+    return ids[0] if ids else 0
+
+
+def is_available() -> bool:
+    """Есть кому отвечать: администраторы в Telegram или CRM-панель."""
+    return bool(admin_ids()) or settings.crm_enabled
+
+
+def client_snapshot(user: User) -> dict:
+    """Снимок карточки клиента для CRM: то, что оператор видит рядом с перепиской."""
+    return {
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": user.username,
+        "phone": user.phone,
+        "city": user.city,
+        "language": user.lang,
+        "role": user.role.value if user.role else None,
+        "registered_at": user.created_at.isoformat() if user.created_at else None,
+        # Дополнительные строки профиля — панель показывает их как есть
+        "details": [
+            {"label": "Рейтинг", "value": user.rating},
+            {"label": "Доставок", "value": user.deliveries_count},
+            {"label": "Проверен", "value": "да" if user.is_verified else "нет"},
+            {"label": "Премиум", "value": "да" if user.is_premium else "нет"},
+            {"label": "Баланс ⭐", "value": user.balance_stars},
+            {"label": "Заблокирован", "value": "да" if user.is_blocked else "нет"},
+        ],
+    }
+
+
+def _mirror_to_crm(sender: str, message: SupportMessage, user: User) -> None:
+    """Копия сообщения в CRM. Вызывать после коммита."""
+    crm_bridge.schedule(CrmEvent(
+        sender=sender,
+        user_id=user.id,
+        text=message.text,
+        external_id=message.id,
+        session_id=message.session_id,
+        created_at=message.created_at,
+        client=client_snapshot(user),
+    ))
 
 
 async def get_or_create_session(session: AsyncSession, user_id: int) -> SupportSession:
@@ -114,7 +170,7 @@ async def send_user_message(
     session: AsyncSession, user: User, text: str,
 ) -> SupportMessage:
     """Пользователь пишет в поддержку."""
-    if not admin_ids():
+    if not is_available():
         raise SupportUnavailable()
 
     ticket = await get_or_create_session(session, user.id)
@@ -133,8 +189,9 @@ async def send_user_message(
     await session.commit()
     await session.refresh(message)
 
-    # Пуш администраторам уходит после записи в базу
+    # Пуш администраторам и копия в CRM уходят после записи в базу
     _notify_admins(user, ticket.id, text)
+    _mirror_to_crm(SENDER_USER, message, user)
 
     logger.info("[SUPPORT] Сообщение пользователя %s в обращении %s", user.id, ticket.id)
     return message
@@ -167,8 +224,12 @@ def _notify_admins(user: User, ticket_id: int, text: str) -> None:
 
 async def send_admin_reply(
     session: AsyncSession, admin_id: int, user_id: int, text: str,
+    origin: str = ORIGIN_APP,
 ) -> SupportMessage | None:
-    """Администратор отвечает пользователю."""
+    """Администратор отвечает пользователю.
+
+    origin — откуда ответ: из бота (зеркалим в CRM) или из CRM (не зеркалим).
+    """
     ticket = (await session.execute(
         select(SupportSession)
         .where(SupportSession.user_id == user_id)
@@ -201,6 +262,9 @@ async def send_admin_reply(
             user_id, body,
             reply_markup=webapp_button(nt(user.lang, "btn_open_support"), "/support"),
         ))
+    # Ответ из бота дублируем в CRM; ответ из CRM обратно не возвращаем
+    if user and origin != ORIGIN_CRM:
+        _mirror_to_crm(SENDER_OPERATOR, message, user)
 
     logger.info("[SUPPORT] Ответ администратора %s пользователю %s", admin_id, user_id)
     return message

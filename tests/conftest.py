@@ -15,6 +15,9 @@ import pytest_asyncio
 os.environ["BOT_TOKEN"] = ""
 os.environ["FREE_ACCESS_UNTIL"] = ""
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
+# Папка медиа: приложение создаёт её при импорте, /app вне контейнера недоступен
+import tempfile
+os.environ.setdefault("MEDIA_ROOT", tempfile.mkdtemp(prefix="parcel_media_"))
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 

@@ -148,3 +148,71 @@ async def test_chat_list_shows_partner(session):
     assert chats[0]["partner_id"] == TRAVELER_ID
     assert chats[0]["last_message"] == "Возьму"
     assert chats[0]["unread_count"] == 1
+
+
+# ─── Зеркало в CRM (KVD Ads Panel) ───
+
+@pytest.fixture
+def crm_capture(monkeypatch):
+    """Мост включён, отправка перехвачена: собираем события вместо HTTP."""
+    monkeypatch.setattr(settings, "crm_ingest_url", "https://cabinet/ingest")
+    monkeypatch.setattr(settings, "crm_api_key", "secret")
+    events = []
+    monkeypatch.setattr(support_service.crm_bridge, "schedule", lambda e: events.append(e))
+    return events
+
+
+@pytest.mark.asyncio
+async def test_user_message_mirrored_to_crm(session, crm_capture):
+    """Сообщение пользователя уходит в CRM со снимком карточки."""
+    sender, _ = await add_users(session)
+    sender.phone = "+971500000000"
+    await session.commit()
+
+    message = await support_service.send_user_message(session, sender, "Где посылка?")
+
+    assert len(crm_capture) == 1
+    event = crm_capture[0]
+    assert event.sender == "user"
+    assert event.user_id == sender.id
+    assert event.external_id == message.id
+    assert event.client["phone"] == "+971500000000"
+    assert event.client["role"] == "sender"
+    assert {d["label"] for d in event.client["details"]} >= {"Рейтинг", "Доставок", "Баланс ⭐"}
+
+
+@pytest.mark.asyncio
+async def test_admin_reply_from_bot_mirrored_but_crm_origin_not(session, crm_capture):
+    """Ответ из бота дублируется в CRM, ответ из CRM — нет (петли нет)."""
+    sender, _ = await add_users(session)
+    await support_service.send_user_message(session, sender, "Вопрос")
+    crm_capture.clear()
+
+    await support_service.send_admin_reply(session, ADMIN_ID, sender.id, "Из бота")
+    assert [e.sender for e in crm_capture] == ["operator"]
+
+    crm_capture.clear()
+    await support_service.send_admin_reply(
+        session, ADMIN_ID, sender.id, "Из панели", origin=support_service.ORIGIN_CRM,
+    )
+    assert crm_capture == []
+
+
+@pytest.mark.asyncio
+async def test_support_available_with_crm_only(session, monkeypatch, crm_capture):
+    """Без администраторов в Telegram, но с CRM — поддержка работает."""
+    monkeypatch.setattr(settings, "admin_ids", "")
+    sender, _ = await add_users(session)
+
+    message = await support_service.send_user_message(session, sender, "Вопрос")
+
+    assert support_service.is_available() is True
+    assert message.id
+    assert len(crm_capture) == 1
+
+
+def test_support_unavailable_without_admins_and_crm(monkeypatch):
+    monkeypatch.setattr(settings, "admin_ids", "")
+    monkeypatch.setattr(settings, "crm_ingest_url", "")
+    monkeypatch.setattr(settings, "crm_api_key", "")
+    assert support_service.is_available() is False

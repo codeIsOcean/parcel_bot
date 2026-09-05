@@ -37,6 +37,18 @@ class Settings(BaseSettings):
     # ID администраторов через запятую: кто может подключать чаты к рассылке
     admin_ids: str = ""
 
+    # === CRM — мост чата поддержки в KVD Ads Panel ===
+    # Копии сообщений поддержки уходят в POST crm_ingest_url (X-API-Key), ответы
+    # оператора из панели приходят на /api/v1/internal/crm/reply тем же ключом.
+    # Оба пустые → мост выключен, ничего никуда не шлётся.
+    crm_ingest_url: str = ""
+    crm_api_key: str = ""
+
+    @property
+    def crm_enabled(self) -> bool:
+        """Мост в CRM включён: заданы и адрес приёма, и ключ."""
+        return bool(self.crm_ingest_url.strip() and self.crm_api_key.strip())
+
     @property
     def admin_id_list(self) -> list[int]:
         """Список ID администраторов."""

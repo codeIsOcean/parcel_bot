@@ -40,8 +40,8 @@ async def get_support_messages(
             }
             for m in messages
         ],
-        # Настроена ли поддержка вообще
-        "available": bool(support_service.admin_ids()),
+        # Настроена ли поддержка вообще (администраторы в Telegram или CRM-панель)
+        "available": support_service.is_available(),
     }
 
 

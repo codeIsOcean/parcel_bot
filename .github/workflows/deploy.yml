@@ -120,7 +120,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "docker-compose.prod.yml,nginx/"
-          target: ~/parcel_bot/
+          # Новый сервер (80.209.231.69): проект живёт в /opt/parcel_bot
+          target: /opt/parcel_bot/
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -129,7 +130,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd ~/parcel_bot
+            cd /opt/parcel_bot
 
             # Логинимся в GitHub Container Registry
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
