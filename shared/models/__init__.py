@@ -11,14 +11,14 @@ from shared.models.payment import Payment
 from shared.models.city import City
 from shared.models.route_vote import RouteVote
 from shared.models.report import Report
-from shared.models.promo_chat import PromoChat
+from shared.models.promo_chat import PromoChat, GroupPost
 from shared.models.balance import BalanceTransaction, BalanceTxnKind
 from shared.models.chat import ChatSession, SupportSession, SupportMessage
 
 __all__ = [
     "Base", "User", "Parcel", "Flight", "Match",
     "RelayMessage", "Review", "Subscription", "Payment",
-    "City", "RouteVote", "Report", "PromoChat",
+    "City", "RouteVote", "Report", "PromoChat", "GroupPost",
     "BalanceTransaction", "BalanceTxnKind",
     "ChatSession", "SupportSession", "SupportMessage",
 ]

@@ -1,4 +1,6 @@
-from sqlalchemy import BigInteger, Float, ForeignKey, Integer, Text
+from datetime import datetime
+
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from shared.models.base import Base, TimestampMixin
 
@@ -24,6 +26,19 @@ class Review(TimestampMixin, Base):
 
     # Комментарий (опционально)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Теги-похвалы через запятую: "on_time,careful,polite". Быстрый отзыв
+    # без текста — одним касанием.
+    tags: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Ответ получателя отзыва. Один ответ, только от того, кому отзыв.
+    reply_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reply_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def tag_list(self) -> list[str]:
+        """Теги списком — для ответа API."""
+        return [t for t in (self.tags or "").split(",") if t]
 
     # Связи
     author = relationship("User", foreign_keys=[author_id])

@@ -61,6 +61,10 @@ class User(TimestampMixin, Base):
     # Заблокирован модерацией — доступ к API закрыт
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Администратор, назначенный из панели. Владельцы из ADMIN_IDS в .env
+    # админы всегда, независимо от этого флага.
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     # Сколько жалоб на пользователя поступило
     reports_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 

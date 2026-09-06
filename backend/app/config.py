@@ -121,6 +121,9 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
+        # .env общий с docker-compose и Vite (POSTGRES_PASSWORD, VITE_API_URL...):
+        # чужие ключи не наши — молча пропускаем, а не падаем на старте
+        "extra": "ignore",
     }
 
 

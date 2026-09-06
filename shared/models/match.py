@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import ForeignKey, Integer, Enum
+from sqlalchemy import ForeignKey, Integer, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from shared.models.base import Base, TimestampMixin
 
@@ -24,6 +24,11 @@ class Match(TimestampMixin, Base):
 
     # Рейс
     flight_id: Mapped[int] = mapped_column(Integer, ForeignKey("flights.id"), nullable=False, index=True)
+
+    # Кто создал заявку: "sender" — отправитель выбрал рейс,
+    # "traveler" — перевозчик откликнулся на посылку (например, из группы).
+    # Принимает заявку всегда противоположная сторона.
+    initiator: Mapped[str] = mapped_column(String(10), default="sender", nullable=False)
 
     # Статус заявки
     status: Mapped[MatchStatus] = mapped_column(
