@@ -22,7 +22,8 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r backend/requirements-dev.txt
+        # Тесты покрывают и бота (gate, клавиатуры) — нужен aiogram
+        run: pip install -r backend/requirements-dev.txt -r bot/requirements.txt
 
       - name: Check single Alembic head
         run: |
