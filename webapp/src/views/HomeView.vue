@@ -300,7 +300,8 @@ onMounted(async () => {
       <!-- Мои рейсы -->
       <div class="section">
         <h2 class="section-title">{{ t('my_flights') }}</h2>
-        <div v-for="flight in myFlights" :key="flight.id" class="card flight-card">
+        <!-- Карточка рейса ведёт на его страницу: заявки и отмена -->
+        <div v-for="flight in myFlights" :key="flight.id" class="card flight-card" @click="router.push({ name: 'flight', params: { id: flight.id } })">
           <div class="flight-top">
             <span class="flight-route">{{ flight.from_city }} → {{ flight.to_city }}</span>
             <span class="flight-date">{{ flight.flight_date }}</span>
