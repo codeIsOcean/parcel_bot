@@ -1,4 +1,5 @@
 """Тонкий бот: белый список сообщений и кнопка запуска."""
+import pytest
 
 from bot.middlewares.gate import is_allowed
 
@@ -29,3 +30,23 @@ def test_open_app_keyboard(monkeypatch):
 
     monkeypatch.setattr(webapp_kb, "WEBAPP_URL", "")
     assert webapp_kb.open_app_keyboard("ru") is None
+
+
+@pytest.mark.asyncio
+async def test_setup_bot_ui_sets_menu_button(monkeypatch):
+    """При старте бот ставит Menu Button на Mini App и список команд."""
+    from bot import main as bot_main
+
+    calls = []
+
+    class FakeBot:
+        async def set_chat_menu_button(self, menu_button):
+            calls.append(("menu", menu_button.web_app.url))
+
+        async def set_my_commands(self, commands):
+            calls.append(("commands", [c.command for c in commands]))
+
+    monkeypatch.setattr(bot_main, "WEBAPP_URL", "https://fly.example.com")
+    await bot_main._setup_bot_ui(FakeBot())
+    assert calls[0] == ("menu", "https://fly.example.com")
+    assert calls[1] == ("commands", ["app", "lang", "help"])

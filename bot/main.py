@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.config import (
     BOT_TOKEN, LOG_LEVEL, REDIS_URL,
-    USE_WEBHOOK, WEBHOOK_PATH, WEBHOOK_PORT, WEBHOOK_SECRET, WEBHOOK_URL,
+    USE_WEBHOOK, WEBAPP_URL, WEBHOOK_PATH, WEBHOOK_PORT, WEBHOOK_SECRET, WEBHOOK_URL,
 )
 from bot.handlers import main_router
 from bot.middlewares.db import DatabaseMiddleware
