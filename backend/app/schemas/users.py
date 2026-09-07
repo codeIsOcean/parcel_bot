@@ -10,6 +10,8 @@ class UserUpdate(BaseModel):
     bio: str | None = Field(default=None, max_length=500)
     lang: str | None = Field(default=None, pattern="^(ru|en|kz)$")
     notifications_enabled: bool | None = None
+    # Последний выбранный режим: отправляю или везу. Запоминается между сессиями.
+    role: str | None = Field(default=None, pattern="^(sender|traveler)$")
 
 
 class UserProfile(BaseModel):
@@ -32,11 +34,27 @@ class UserProfile(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PrivateProfile(UserProfile):
+    """Свой профиль: то, что не показываем другим."""
+    phone: str | None = None
+    lang: str = "ru"
+    is_admin: bool = False
+    balance_stars: int = 0
+    notifications_enabled: bool = True
+
+
 class ReviewCreate(BaseModel):
     """Создание отзыва."""
     parcel_id: int
     rating: float = Field(ge=1, le=5)
     comment: str | None = Field(default=None, max_length=1000)
+    # Теги-похвалы: on_time, careful, polite, good_price, recommended
+    tags: list[str] = Field(default_factory=list, max_length=6)
+
+
+class ReviewReply(BaseModel):
+    """Ответ получателя на отзыв."""
+    text: str = Field(min_length=1, max_length=500)
 
 
 class ReviewResponse(BaseModel):
@@ -44,8 +62,12 @@ class ReviewResponse(BaseModel):
     id: int
     author_id: int
     author_name: str | None = None
+    target_id: int | None = None
     rating: float
     comment: str | None = None
+    tags: list[str] = []
+    reply_text: str | None = None
+    reply_created_at: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

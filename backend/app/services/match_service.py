@@ -2,7 +2,7 @@ import logging
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from backend.app.services import chat_service, notification_service
+from backend.app.services import chat_service, crosspost_service, notification_service
 from backend.app.services.access_service import ensure_can_respond
 from shared.models.match import Match, MatchStatus
 from shared.models.parcel import Parcel, ParcelStatus
@@ -66,6 +66,95 @@ async def create_match(
 
     logger.info("[MATCH] Создан: match_id=%s", match.id)
     return match
+
+
+async def create_offer(
+    session: AsyncSession,
+    parcel_id: int,
+    flight_id: int,
+    traveler_id: int,
+) -> Match:
+    """Перевозчик откликается на посылку своим рейсом (например, из группы).
+
+    Зеркало create_match: инициатор — перевозчик, принимает отправитель.
+    """
+    logger.info("[MATCH] Отклик: parcel=%s, flight=%s, traveler=%s", parcel_id, flight_id, traveler_id)
+
+    parcel = await session.get(Parcel, parcel_id)
+    if not parcel:
+        raise ValueError("Parcel not found")
+    if parcel.status != ParcelStatus.PENDING:
+        raise ValueError("Parcel is not pending")
+    # Посылка, адресованная другому перевозчику, чужие отклики не принимает
+    if parcel.traveler_id and parcel.traveler_id != traveler_id:
+        raise ValueError("Parcel is reserved for another traveler")
+    if parcel.sender_id == traveler_id:
+        raise ValueError("Cannot respond to own parcel")
+
+    flight = await session.get(Flight, flight_id)
+    if not flight or flight.traveler_id != traveler_id:
+        raise ValueError("Not authorized: not the flight owner")
+
+    # Дубль отклика не создаём
+    existing = (await session.execute(
+        select(Match).where(and_(Match.parcel_id == parcel_id, Match.flight_id == flight_id))
+    )).scalar_one_or_none()
+    if existing:
+        raise ValueError("Match already exists")
+
+    # Отклик — это ответ на заявку, он открывает рабочий день перевозчика
+    traveler = await session.get(User, traveler_id)
+    if traveler:
+        await ensure_can_respond(session, traveler)
+
+    match = Match(parcel_id=parcel_id, flight_id=flight_id, status=MatchStatus.PENDING, initiator="traveler")
+    session.add(match)
+    await session.commit()
+    await session.refresh(match)
+
+    # Переписку заводим сразу, чтобы стороны могли договориться до принятия
+    await chat_service.ensure_session_for_match(session, parcel, flight)
+
+    # Отправитель узнаёт об отклике, даже если Mini App закрыт
+    await notification_service.notify_offer_received(session, parcel, flight)
+
+    logger.info("[MATCH] Отклик создан: match_id=%s", match.id)
+    return match
+
+
+async def get_parcel_offers(session: AsyncSession, parcel_id: int) -> list[dict]:
+    """Отклики перевозчиков на посылку — для экрана отправителя."""
+    rows = (await session.execute(
+        select(Match, Flight, User)
+        .join(Flight, Match.flight_id == Flight.id)
+        .join(User, Flight.traveler_id == User.id)
+        .where(Match.parcel_id == parcel_id)
+        .order_by(Match.created_at.desc())
+    )).all()
+
+    return [{
+        "id": match.id,
+        "status": match.status.value,
+        "initiator": match.initiator,
+        "created_at": match.created_at,
+        "flight": {
+            "id": flight.id,
+            "from_city": flight.from_city,
+            "to_city": flight.to_city,
+            "flight_date": flight.flight_date,
+            "available_kg": flight.available_kg,
+            "price_per_kg": flight.price_per_kg,
+            "status": flight.status.value,
+        },
+        "traveler": {
+            "id": traveler.id,
+            "name": traveler.full_name,
+            "rating": traveler.rating,
+            "reviews_count": traveler.reviews_count,
+            "deliveries_count": traveler.deliveries_count,
+            "is_verified": traveler.is_verified,
+        },
+    } for match, flight, traveler in rows]
 
 
 async def get_flight_requests(
@@ -197,12 +286,21 @@ async def get_incoming_requests(
     ]
 
 
+def _may_answer(match: Match, flight: Flight, parcel: Parcel, actor_id: int) -> bool:
+    """Отвечает на заявку противоположная сторона: на заявку отправителя —
+    хозяин рейса, на отклик перевозчика — хозяин посылки."""
+    if match.initiator == "traveler":
+        return parcel.sender_id == actor_id
+    return flight.traveler_id == actor_id
+
+
 async def accept_match(
     session: AsyncSession,
     match_id: int,
-    traveler_id: int,
+    actor_id: int,
 ) -> Match:
     """Принять заявку — привязать посылку к перевозчику."""
+    traveler_id = actor_id
     # Загружаем match с рейсом
     result = await session.execute(
         select(Match).where(Match.id == match_id)
@@ -220,24 +318,24 @@ async def accept_match(
         select(Flight).where(Flight.id == match.flight_id)
     )
     flight = flight_result.scalar_one_or_none()
-    if not flight or flight.traveler_id != traveler_id:
+    parcel = await session.get(Parcel, match.parcel_id)
+    if not flight or not parcel:
+        raise ValueError("Match is broken")
+    if not _may_answer(match, flight, parcel, actor_id):
         raise ValueError("Not authorized")
 
-    # Отвечать на заявки можно только когда открыт сегодняшний рабочий день
-    traveler = await session.get(User, traveler_id)
-    if traveler:
-        await ensure_can_respond(session, traveler)
+    # Перевозчик всегда хозяин рейса, кто бы ни нажимал «принять»
+    traveler_id = flight.traveler_id
+
+    # Отвечать на заявки можно только когда открыт сегодняшний рабочий день.
+    # Отклик перевозчика день уже открыл, поэтому проверяем только заявки отправителя.
+    if match.initiator != "traveler":
+        traveler = await session.get(User, traveler_id)
+        if traveler:
+            await ensure_can_respond(session, traveler)
 
     # Обновляем статус заявки
     match.status = MatchStatus.ACCEPTED
-
-    # Обновляем посылку — привязываем перевозчика
-    parcel_result = await session.execute(
-        select(Parcel).where(Parcel.id == match.parcel_id)
-    )
-    parcel = parcel_result.scalar_one_or_none()
-    if not parcel:
-        raise ValueError("Parcel not found")
 
     # Защита от двойного принятия — посылка уже взята другим перевозчиком
     if parcel.status != ParcelStatus.PENDING:
@@ -252,8 +350,14 @@ async def accept_match(
     await session.commit()
     await session.refresh(match)
 
-    # Отправитель узнаёт, что его посылку взяли
-    await notification_service.notify_request_accepted(session, parcel, flight)
+    # Вторая сторона узнаёт о решении
+    if match.initiator == "traveler":
+        await notification_service.notify_offer_accepted(session, parcel, flight)
+    else:
+        await notification_service.notify_request_accepted(session, parcel, flight)
+
+    # Посылку забрали — объявления в группах закрываем
+    await crosspost_service.close_parcel_posts(session, parcel)
 
     logger.info("[MATCH] Принят: match=%s, traveler=%s", match_id, traveler_id)
     return match
@@ -262,9 +366,10 @@ async def accept_match(
 async def decline_match(
     session: AsyncSession,
     match_id: int,
-    traveler_id: int,
+    actor_id: int,
 ) -> Match:
     """Отклонить заявку."""
+    traveler_id = actor_id
     result = await session.execute(
         select(Match).where(Match.id == match_id)
     )
@@ -281,16 +386,20 @@ async def decline_match(
         select(Flight).where(Flight.id == match.flight_id)
     )
     flight = flight_result.scalar_one_or_none()
-    if not flight or flight.traveler_id != traveler_id:
+    parcel = await session.get(Parcel, match.parcel_id)
+    if not flight or not parcel:
+        raise ValueError("Match is broken")
+    if not _may_answer(match, flight, parcel, actor_id):
         raise ValueError("Not authorized")
 
     match.status = MatchStatus.DECLINED
     await session.commit()
     await session.refresh(match)
 
-    # Отправителю сообщаем, что посылка снова в поиске
-    parcel = await session.get(Parcel, match.parcel_id)
-    if parcel:
+    # Второй стороне сообщаем об отказе
+    if match.initiator == "traveler":
+        await notification_service.notify_offer_declined(session, parcel, flight)
+    else:
         await notification_service.notify_request_declined(session, parcel)
 
     logger.info("[MATCH] Отклонён: match=%s, traveler=%s", match_id, traveler_id)

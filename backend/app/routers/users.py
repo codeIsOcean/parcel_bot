@@ -7,34 +7,45 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.database import get_session
 from backend.app.dependencies import get_current_user
 from backend.app.schemas.users import (
-    UserProfile, UserUpdate, ReviewCreate, ReviewResponse,
+    PrivateProfile, UserProfile, UserUpdate, ReviewCreate, ReviewReply, ReviewResponse,
 )
 from backend.app.services import user_service
+from backend.app.services.admin_service import is_admin
+from backend.app.services.user_service import ReviewReplyError
 from shared.models.parcel import Parcel, ParcelStatus
-from shared.models.user import User
+from shared.models.user import User, UserRole
 from shared.models.review import Review
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/me", response_model=UserProfile)
+def _private(user: User) -> PrivateProfile:
+    """Свой профиль с приватными полями и признаком администратора."""
+    profile = PrivateProfile.model_validate(user)
+    profile.is_admin = is_admin(user)
+    return profile
+
+
+@router.get("/me", response_model=PrivateProfile)
 async def get_my_profile(user: User = Depends(get_current_user)):
     """Получить свой профиль."""
-    return UserProfile.model_validate(user)
+    return _private(user)
 
 
-@router.put("/me", response_model=UserProfile)
+@router.put("/me", response_model=PrivateProfile)
 async def update_my_profile(
     data: UserUpdate,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
     """Обновить свой профиль."""
-    updated = await user_service.update_user(
-        session, user, **data.model_dump(exclude_none=True),
-    )
-    return UserProfile.model_validate(updated)
+    fields = data.model_dump(exclude_none=True)
+    # Режим хранится в enum роли
+    if "role" in fields:
+        fields["role"] = UserRole(fields["role"])
+    updated = await user_service.update_user(session, user, **fields)
+    return _private(updated)
 
 
 @router.get("/{user_id}", response_model=UserProfile)
@@ -116,6 +127,7 @@ async def create_review(
         parcel_id=data.parcel_id,
         rating=data.rating,
         comment=data.comment,
+        tags=user_service.normalize_tags(data.tags),
     )
     session.add(review)
     await session.commit()
@@ -128,8 +140,40 @@ async def create_review(
         id=review.id,
         author_id=review.author_id,
         author_name=user.full_name,
+        target_id=review.target_id,
         rating=review.rating,
         comment=review.comment,
+        tags=review.tag_list,
+        created_at=review.created_at,
+    )
+
+
+@router.post("/reviews/{review_id}/reply", response_model=ReviewResponse)
+async def reply_to_review(
+    review_id: int,
+    data: ReviewReply,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Ответить на отзыв о себе. Один ответ, только получатель отзыва."""
+    try:
+        review = await user_service.reply_to_review(session, review_id, user.id, data.text)
+    except ReviewReplyError as e:
+        # Причина — в теле ответа, фронт показывает подходящий текст
+        status = {"not_found": 404, "not_target": 403, "already_replied": 409}[e.reason]
+        raise HTTPException(status_code=status, detail=e.reason)
+
+    author = await user_service.get_user_by_id(session, review.author_id)
+    return ReviewResponse(
+        id=review.id,
+        author_id=review.author_id,
+        author_name=author.full_name if author else None,
+        target_id=review.target_id,
+        rating=review.rating,
+        comment=review.comment,
+        tags=review.tag_list,
+        reply_text=review.reply_text,
+        reply_created_at=review.reply_created_at,
         created_at=review.created_at,
     )
 

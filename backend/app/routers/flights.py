@@ -109,6 +109,25 @@ async def get_my_flights(
     )
 
 
+@router.post("/{flight_id}/cancel", response_model=FlightResponse)
+async def cancel_flight(
+    flight_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Отменить свой рейс."""
+    flight = await flight_service.cancel_flight(session, flight_id, user.id)
+    if not flight:
+        raise HTTPException(status_code=400, detail="Cannot cancel this flight")
+    return FlightResponse(
+        **{k: getattr(flight, k) for k in FlightResponse.model_fields if hasattr(flight, k)},
+        traveler_name=user.full_name,
+        traveler_rating=user.rating,
+        traveler_trips=user.deliveries_count,
+        traveler_verified=user.is_verified,
+    )
+
+
 @router.get("/{flight_id}", response_model=FlightResponse)
 async def get_flight_detail(
     flight_id: int,

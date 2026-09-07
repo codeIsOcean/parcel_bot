@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.app.services import moderation_service, notification_service
+from backend.app.services import crosspost_service, moderation_service, notification_service
 from shared.models.parcel import Parcel, ParcelStatus, ParcelSize
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,9 @@ async def create_parcel(
 
     # Если подходящие рейсы уже опубликованы — отправитель узнаёт об этом сразу
     await notification_service.notify_matches_for_new_parcel(session, parcel)
+
+    # И разносим объявление по подключённым группам — перевозчики откликнутся сами
+    await crosspost_service.announce_parcel(session, parcel)
 
     logger.info("[PARCEL] Создана: parcel_id=%s", parcel.id)
     return parcel
@@ -113,6 +116,9 @@ async def cancel_parcel(session: AsyncSession, parcel_id: int, user_id: int) -> 
     await session.commit()
     await session.refresh(parcel)
 
+    # Объявления в группах больше не актуальны
+    await crosspost_service.close_parcel_posts(session, parcel)
+
     logger.info("[PARCEL] Отменена: parcel_id=%s, user=%s", parcel_id, user_id)
     return parcel
 
@@ -133,6 +139,9 @@ async def accept_parcel(
     parcel.status = ParcelStatus.ACCEPTED
     await session.commit()
     await session.refresh(parcel)
+
+    # Посылку забрали — закрываем объявления в группах
+    await crosspost_service.close_parcel_posts(session, parcel)
 
     logger.info("[PARCEL] Принята: parcel=%s, traveler=%s", parcel_id, traveler_id)
     return parcel

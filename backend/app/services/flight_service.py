@@ -54,6 +54,28 @@ async def create_flight(
     return flight
 
 
+async def cancel_flight(session: AsyncSession, flight_id: int, traveler_id: int | None = None) -> Flight | None:
+    """Отменить рейс. Без traveler_id — от имени администратора."""
+    flight = await session.get(Flight, flight_id)
+    if not flight:
+        return None
+    if traveler_id is not None and flight.traveler_id != traveler_id:
+        return None
+    # Закрытый рейс отменять нечего
+    if flight.status in (FlightStatus.COMPLETED, FlightStatus.CANCELLED):
+        return None
+
+    flight.status = FlightStatus.CANCELLED
+    await session.commit()
+    await session.refresh(flight)
+
+    # Объявления в группах закрываем
+    await crosspost_service.close_flight_posts(session, flight)
+
+    logger.info("[FLIGHT] Отменён: flight_id=%s, by=%s", flight_id, traveler_id or "admin")
+    return flight
+
+
 async def get_popular_routes(session: AsyncSession, limit: int = 6) -> list[dict]:
     """Маршруты с наибольшим числом активных рейсов.
 

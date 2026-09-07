@@ -14,7 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from backend.app.routers import (
     auth, parcels, flights, users, chats, matches, subscriptions, cities, reports,
-    wallet, support, media, internal_crm,
+    wallet, support, media, internal_crm, admin,
 )
 from backend.app.services.access_service import PaymentRequiredError
 from backend.app.services.moderation_service import ProhibitedContentError
@@ -138,6 +138,7 @@ app.include_router(wallet.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")
 app.include_router(internal_crm.router, prefix="/api/v1")
 app.include_router(media.router, prefix="/api/v1")
+app.include_router(admin.router, prefix="/api/v1")
 
 
 # Раздача загруженных фотографий

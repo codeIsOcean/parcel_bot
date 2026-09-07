@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.database import get_session
 from backend.app.dependencies import get_current_user
 from backend.app.schemas.parcels import (
-    DeliveryConfirmRequest, DeliveryStepRequest,
+    DeliveryConfirmRequest, DeliveryStepRequest, OfferCreate,
     ParcelCreate, ParcelResponse, PaginatedParcels,
 )
-from backend.app.services import delivery_service, media_service, parcel_service
+from backend.app.services import delivery_service, match_service, media_service, parcel_service
 from backend.app.services.delivery_service import DeliveryError
 from shared.models.user import User
 
@@ -24,6 +24,13 @@ async def _enrich_parcel_response(session: AsyncSession, parcel) -> ParcelRespon
         if traveler:
             response.traveler_name = traveler.full_name
             response.traveler_rating = traveler.rating
+    # Отправителя показываем перевозчику, который смотрит карточку из группы
+    sender = await session.get(User, parcel.sender_id)
+    if sender:
+        response.sender_name = sender.full_name
+        response.sender_rating = sender.rating
+        response.sender_reviews_count = sender.reviews_count
+        response.sender_verified = sender.is_verified
     return response
 
 router = APIRouter(prefix="/parcels", tags=["parcels"])
@@ -47,7 +54,16 @@ async def create_parcel(
         price=data.price,
         traveler_id=data.traveler_id,
     )
-    return ParcelResponse.model_validate(parcel)
+
+    # Отправитель выбрал конкретный рейс — заявка на него уходит сразу
+    if data.flight_id:
+        try:
+            await match_service.create_match(session, parcel.id, data.flight_id, sender_id=user.id)
+        except ValueError as e:
+            # Посылка уже создана, заявку можно подать повторно с экрана рейса
+            logger.warning("[PARCEL] Заявка на рейс %s не создана: %s", data.flight_id, e)
+
+    return await _enrich_parcel_response(session, parcel)
 
 
 @router.get("/my", response_model=PaginatedParcels)
@@ -81,6 +97,38 @@ async def get_parcel(
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcel not found")
     return await _enrich_parcel_response(session, parcel)
+
+
+@router.post("/{parcel_id}/offer", status_code=201)
+async def offer_flight(
+    parcel_id: int,
+    data: OfferCreate,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Перевозчик откликается на посылку своим рейсом."""
+    try:
+        match = await match_service.create_offer(session, parcel_id, data.flight_id, traveler_id=user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"id": match.id, "status": match.status.value, "initiator": match.initiator}
+
+
+@router.get("/{parcel_id}/offers")
+async def get_parcel_offers(
+    parcel_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Отклики и заявки по посылке. Отправителю — все, перевозчику — только свои."""
+    parcel = await parcel_service.get_parcel_by_id(session, parcel_id)
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcel not found")
+
+    offers = await match_service.get_parcel_offers(session, parcel_id)
+    if parcel.sender_id != user.id:
+        offers = [o for o in offers if o["traveler"]["id"] == user.id]
+    return {"items": offers, "total": len(offers)}
 
 
 @router.get("/{parcel_id}/tracking")

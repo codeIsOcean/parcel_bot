@@ -11,6 +11,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared import deeplinks
 from shared.locale.notify_texts import nt
 from shared.models.flight import Flight, FlightStatus
 from shared.models.parcel import Parcel, ParcelStatus
@@ -209,6 +210,78 @@ async def notify_matches_for_new_flight(session: AsyncSession, flight: Flight) -
         notify(sender, sender_text, webapp_button(nt(sender.lang, "btn_open_app"), "/travelers"))
 
     logger.info("[MATCH] Рейс %s: посылок найдено %s", flight.id, len(parcels))
+
+
+# === Отклики перевозчиков ===
+
+async def notify_offer_received(session: AsyncSession, parcel: Parcel, flight: Flight) -> None:
+    """Отправителю: на его посылку откликнулся перевозчик."""
+    sender = await session.get(User, parcel.sender_id)
+    traveler = await session.get(User, flight.traveler_id)
+    if not sender or not traveler:
+        return
+
+    text = nt(
+        sender.lang, "offer_received",
+        description=parcel.description, from_city=flight.from_city, to_city=flight.to_city,
+        flight_date=flight.flight_date.strftime("%d.%m.%Y"),
+        traveler_name=traveler.full_name, traveler_rating=format_rating(traveler),
+        price_per_kg=flight.price_per_kg,
+    )
+    notify(sender, text, webapp_button(
+        nt(sender.lang, "btn_open_parcel"), deeplinks.screen_path(deeplinks.parcel_param(parcel.id)),
+    ))
+
+
+async def notify_offer_accepted(session: AsyncSession, parcel: Parcel, flight: Flight) -> None:
+    """Перевозчику: отправитель принял его отклик."""
+    traveler = await session.get(User, flight.traveler_id)
+    if not traveler:
+        return
+
+    text = nt(
+        traveler.lang, "offer_accepted",
+        description=parcel.description, from_city=flight.from_city, to_city=flight.to_city,
+        flight_date=flight.flight_date.strftime("%d.%m.%Y"),
+    )
+    notify(traveler, text, webapp_button(nt(traveler.lang, "btn_open_chat"), "/chats"))
+
+
+async def notify_offer_declined(session: AsyncSession, parcel: Parcel, flight: Flight) -> None:
+    """Перевозчику: отправитель отклонил его отклик."""
+    traveler = await session.get(User, flight.traveler_id)
+    if not traveler:
+        return
+
+    text = nt(traveler.lang, "offer_declined", from_city=parcel.from_city, to_city=parcel.to_city)
+    notify(traveler, text, webapp_button(nt(traveler.lang, "btn_open_app"), "/"))
+
+
+# === Отзывы ===
+
+def notify_review_replied(author: User, target: User, reply_text: str) -> None:
+    """Автору отзыва: получатель ответил."""
+    text = nt(author.lang, "review_replied", name=target.full_name, text=reply_text)
+    notify(author, text, webapp_button(
+        nt(author.lang, "btn_open_profile"), deeplinks.screen_path(f"profile_{target.id}"),
+    ))
+
+
+# === Действия администратора ===
+
+def notify_admin_block(user: User, blocked: bool) -> None:
+    """Пользователю: его заблокировали или разблокировали."""
+    key = "admin_blocked" if blocked else "admin_unblocked"
+    markup = None if blocked else webapp_button(nt(user.lang, "btn_open_app"), "/")
+    # Заблокированному пишем даже если он раньше скрыл бота — это важное уведомление
+    fire_and_forget(_deliver(user.id, nt(user.lang, key), markup))
+
+
+def notify_admin_balance(user: User, delta: int, balance: int) -> None:
+    """Пользователю: администратор изменил баланс."""
+    sign = f"+{delta} ⭐" if delta > 0 else f"{delta} ⭐"
+    notify(user, nt(user.lang, "admin_balance_changed", delta=sign, balance=balance),
+           webapp_button(nt(user.lang, "btn_open_wallet"), "/wallet"))
 
 
 # === Чат ===

@@ -1,8 +1,10 @@
+from datetime import datetime, timezone
 import logging
 
 from backend.app.config import settings
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from backend.app.services import notification_service
 from shared.models.user import User, UserRole
 from shared.models.review import Review
 
@@ -122,9 +124,58 @@ async def get_user_reviews(
             "id": review.id,
             "author_id": review.author_id,
             "author_name": author.full_name,
+            "target_id": review.target_id,
             "rating": review.rating,
             "comment": review.comment,
+            "tags": review.tag_list,
+            "reply_text": review.reply_text,
+            "reply_created_at": review.reply_created_at,
             "created_at": review.created_at,
         })
 
     return reviews, total
+
+
+# Разрешённые теги-похвалы в отзыве
+REVIEW_TAGS = ("on_time", "careful", "polite", "good_price", "recommended")
+
+
+def normalize_tags(tags: list[str] | None) -> str | None:
+    """Оставить только известные теги, без дублей, в строку для хранения."""
+    if not tags:
+        return None
+    clean = [t for t in dict.fromkeys(tags) if t in REVIEW_TAGS]
+    return ",".join(clean) or None
+
+
+class ReviewReplyError(Exception):
+    """Ответить на отзыв нельзя: причина в reason."""
+
+    def __init__(self, reason: str):
+        super().__init__(reason)
+        self.reason = reason
+
+
+async def reply_to_review(session: AsyncSession, review_id: int, actor_id: int, text: str) -> Review:
+    """Ответ получателя на отзыв. Один ответ, только от того, кому отзыв."""
+    review = await session.get(Review, review_id)
+    if not review:
+        raise ReviewReplyError("not_found")
+    if review.target_id != actor_id:
+        raise ReviewReplyError("not_target")
+    if review.reply_text:
+        raise ReviewReplyError("already_replied")
+
+    review.reply_text = text.strip()
+    review.reply_created_at = datetime.now(timezone.utc)
+    await session.commit()
+    await session.refresh(review)
+
+    # Автор отзыва узнаёт об ответе
+    author = await get_user_by_id(session, review.author_id)
+    target = await get_user_by_id(session, actor_id)
+    if author and target:
+        notification_service.notify_review_replied(author, target, review.reply_text)
+
+    logger.info("[RATING] Ответ на отзыв: review=%s, by=%s", review_id, actor_id)
+    return review

@@ -124,6 +124,66 @@ NOTIFY_TEXTS: dict[str, dict[str, str]] = {
               "👤 {traveler_name} {traveler_rating}\n\n"
               "<i>Requests go through the app: a card, delivery statuses and traveler rating.</i>",
     },
+    "crosspost_parcel": {
+        "ru": "📦 <b>Нужно отправить: {from_city} → {to_city}</b>\n\n"
+              "📝 {description}\n"
+              "⚖️ <b>{weight} кг</b> · 💰 <b>${price}</b> за доставку\n"
+              "👤 {sender_name} {sender_rating}\n\n"
+              "<i>Откликнуться можно в приложении: статусы доставки, код выдачи и рейтинг.</i>",
+        "en": "📦 <b>To send: {from_city} → {to_city}</b>\n\n"
+              "📝 {description}\n"
+              "⚖️ <b>{weight} kg</b> · 💰 <b>${price}</b> for delivery\n"
+              "👤 {sender_name} {sender_rating}\n\n"
+              "<i>Respond in the app: delivery statuses, pickup code and rating.</i>",
+    },
+    "crosspost_closed": {
+        "ru": "\n\n✅ <b>Закрыто</b>",
+        "en": "\n\n✅ <b>Closed</b>",
+    },
+    "offer_received": {
+        "ru": "✈️ <b>Перевозчик откликнулся на вашу посылку</b>\n\n"
+              "📦 {description}\n"
+              "🛫 {from_city} → {to_city}, {flight_date}\n"
+              "👤 {traveler_name} {traveler_rating}\n"
+              "💰 ${price_per_kg} за кг\n\n"
+              "Примите отклик в приложении или напишите перевозчику.",
+        "en": "✈️ <b>A traveler responded to your parcel</b>\n\n"
+              "📦 {description}\n"
+              "🛫 {from_city} → {to_city}, {flight_date}\n"
+              "👤 {traveler_name} {traveler_rating}\n"
+              "💰 ${price_per_kg} per kg\n\n"
+              "Accept the offer in the app or message the traveler.",
+    },
+    "offer_accepted": {
+        "ru": "✅ <b>Отправитель принял ваш отклик</b>\n\n"
+              "📦 {description}\n"
+              "🛫 {from_city} → {to_city}, {flight_date}\n\n"
+              "Договоритесь о передаче в чате.",
+        "en": "✅ <b>The sender accepted your offer</b>\n\n"
+              "📦 {description}\n"
+              "🛫 {from_city} → {to_city}, {flight_date}\n\n"
+              "Arrange the handover in chat.",
+    },
+    "offer_declined": {
+        "ru": "❌ Отправитель отклонил ваш отклик на посылку <b>{from_city} → {to_city}</b>.",
+        "en": "❌ The sender declined your offer for the parcel <b>{from_city} → {to_city}</b>.",
+    },
+    "review_replied": {
+        "ru": "💬 <b>{name}</b> ответил(а) на ваш отзыв:\n\n<i>{text}</i>",
+        "en": "💬 <b>{name}</b> replied to your review:\n\n<i>{text}</i>",
+    },
+    "admin_blocked": {
+        "ru": "🚫 Ваш аккаунт заблокирован администрацией.\n\nЕсли это ошибка — напишите в поддержку.",
+        "en": "🚫 Your account has been blocked by the administration.\n\nIf this is a mistake, contact support.",
+    },
+    "admin_unblocked": {
+        "ru": "✅ Доступ восстановлен. Можно продолжать пользоваться приложением.",
+        "en": "✅ Access restored. You can keep using the app.",
+    },
+    "admin_balance_changed": {
+        "ru": "⭐ Администратор изменил ваш баланс: <b>{delta}</b>. Текущий баланс: <b>{balance} ⭐</b>.",
+        "en": "⭐ An administrator changed your balance: <b>{delta}</b>. Current balance: <b>{balance} ⭐</b>.",
+    },
     "group_offer": {
         "ru": "👋 Похоже, вы везёте посылки по маршруту <b>{route}</b>.\n\n"
               "Оформите рейс в приложении — объявление само разойдётся по чатам, "
@@ -198,6 +258,9 @@ NOTIFY_TEXTS: dict[str, dict[str, str]] = {
     "btn_support_reply": {"ru": "✍️ Ответить", "en": "✍️ Reply"},
     "btn_open_support": {"ru": "🆘 Открыть поддержку", "en": "🆘 Open support"},
     "btn_open_wallet": {"ru": "⭐ Кабинет", "en": "⭐ Wallet"},
+    "btn_take_parcel": {"ru": "✈️ Откликнуться", "en": "✈️ Respond"},
+    "btn_open_parcel": {"ru": "📦 Открыть посылку", "en": "📦 Open parcel"},
+    "btn_open_profile": {"ru": "👤 Открыть профиль", "en": "👤 Open profile"},
 }
 
 # Язык по умолчанию, если у пользователя не проставлен поддерживаемый

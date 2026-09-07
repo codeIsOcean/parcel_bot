@@ -11,6 +11,13 @@ class ParcelCreate(BaseModel):
     size: str = Field(default="medium")
     price: float = Field(gt=0, le=10000)
     traveler_id: int | None = None
+    # Рейс, выбранный отправителем: заявка на него создаётся сразу
+    flight_id: int | None = None
+
+
+class OfferCreate(BaseModel):
+    """Отклик перевозчика на посылку своим рейсом."""
+    flight_id: int
 
 
 class ParcelResponse(BaseModel):
@@ -36,6 +43,11 @@ class ParcelResponse(BaseModel):
     # Данные перевозчика (заполняются при наличии traveler_id)
     traveler_name: str | None = None
     traveler_rating: float | None = None
+    # Данные отправителя — для карточки посылки у перевозчика
+    sender_name: str | None = None
+    sender_rating: float | None = None
+    sender_reviews_count: int | None = None
+    sender_verified: bool | None = None
 
     model_config = {"from_attributes": True}
 

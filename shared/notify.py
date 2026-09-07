@@ -147,6 +147,46 @@ async def send_message(
     return await _call_api("sendMessage", payload)
 
 
+async def send_message_id(
+    chat_id: int,
+    text: str,
+    reply_markup: dict | None = None,
+) -> int | None:
+    """Отправить сообщение и вернуть его message_id (нужно постам в группах)."""
+    payload: dict = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "link_preview_options": {"is_disabled": True},
+    }
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
+
+    result = await call_api("sendMessage", payload)
+    if not result:
+        return None
+    return result.get("message_id")
+
+
+async def edit_message_text(
+    chat_id: int,
+    message_id: int,
+    text: str,
+    reply_markup: dict | None = None,
+) -> bool:
+    """Отредактировать текст сообщения. Пустой reply_markup снимает кнопки."""
+    payload: dict = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "link_preview_options": {"is_disabled": True},
+        # Явно пустая клавиатура убирает кнопку под закрытым объявлением
+        "reply_markup": reply_markup or {"inline_keyboard": []},
+    }
+    return (await call_api("editMessageText", payload)) is not None
+
+
 def webapp_button(text: str, path: str = "/") -> dict | None:
     """Инлайн-клавиатура с одной кнопкой, открывающей Mini App на нужном экране."""
     # Без публичного адреса Mini App кнопку построить нельзя

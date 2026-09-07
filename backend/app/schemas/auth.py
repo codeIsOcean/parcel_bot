@@ -31,6 +31,10 @@ class UserResponse(BaseModel):
     is_verified: bool
     lang: str
     avatar_file_id: str | None = None
+    # Свои приватные поля — приходят только владельцу токена
+    phone: str | None = None
+    is_admin: bool = False
+    balance_stars: int = 0
 
     model_config = {"from_attributes": True}
 
