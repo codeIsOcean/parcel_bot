@@ -14,6 +14,34 @@ export function useTelegram() {
   // initData для авторизации на backend
   const initData = computed(() => tg?.initData || '')
 
+  // Параметр запуска из ссылки t.me/bot?startapp=... (кнопки в группах)
+  const startParam = computed(() => tg?.initDataUnsafe?.start_param || '')
+
+  /**
+   * Запросить номер телефона нативным окном Telegram.
+   * Контакт уходит боту сообщением, бот сохраняет номер в профиль.
+   * Возвращает true, если пользователь поделился.
+   */
+  const requestContact = () => new Promise((resolve) => {
+    if (!tg?.requestContact) {
+      resolve(false)
+      return
+    }
+    try {
+      tg.requestContact((sent) => resolve(!!sent))
+    } catch {
+      resolve(false)
+    }
+  })
+
+  /**
+   * Открыть ссылку на бота (запасной путь регистрации).
+   */
+  const openTelegramLink = (url) => {
+    if (tg?.openTelegramLink) tg.openTelegramLink(url)
+    else window.open(url, '_blank')
+  }
+
   // Цветовая схема (light/dark)
   const colorScheme = computed(() => tg?.colorScheme || 'dark')
 
@@ -123,6 +151,9 @@ export function useTelegram() {
     tg,
     user,
     initData,
+    startParam,
+    requestContact,
+    openTelegramLink,
     colorScheme,
     themeParams,
     ready,

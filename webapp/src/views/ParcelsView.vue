@@ -47,10 +47,10 @@ const statusColors = {
 // Получить цвет бейджа по статусу
 const getStatusColor = (status) => statusColors[status] || '#8E8E93'
 
-// Переход к трекингу посылки
+// Переход к карточке посылки: отклики, чат, отслеживание
 const goToTracking = (parcel) => {
   haptic.impact('light')
-  router.push({ name: 'tracking', params: { id: parcel.id } })
+  router.push({ name: 'parcel', params: { id: parcel.id } })
 }
 
 // Переход к созданию посылки

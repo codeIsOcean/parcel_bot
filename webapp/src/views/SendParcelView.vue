@@ -127,6 +127,8 @@ const submitParcel = async () => {
       size: size.value,
       price: price.value,
       traveler_id: route.query.traveler_id,
+      // Выбран рейс — заявка на него уходит сразу
+      flight_id: route.query.flight_id ? Number(route.query.flight_id) : undefined,
     })
 
     // Снимок отправляем отдельно: он привязан к созданной посылке

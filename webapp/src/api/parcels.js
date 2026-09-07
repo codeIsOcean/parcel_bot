@@ -57,4 +57,16 @@ export const parcelsApi = {
    */
   markDelivered: (id, code, photoFileIds = null) =>
     api.post(`/parcels/${id}/delivered`, { code, photo_file_ids: photoFileIds }),
+
+  /**
+   * Перевозчик откликается на посылку своим рейсом.
+   */
+  offer: (id, flightId) =>
+    api.post(`/parcels/${id}/offer`, { flight_id: flightId }),
+
+  /**
+   * Отклики и заявки по посылке.
+   */
+  getOffers: (id) =>
+    api.get(`/parcels/${id}/offers`),
 }

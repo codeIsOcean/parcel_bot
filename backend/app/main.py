@@ -146,6 +146,12 @@ Path(settings.media_root).mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=settings.media_root), name="media")
 
 
+@app.get("/api/v1/meta")
+async def public_meta():
+    """Публичные настройки для Mini App: юзернейм бота для ссылок."""
+    return {"bot_username": settings.bot_username, "webapp_url": settings.webapp_url}
+
+
 @app.get("/health")
 async def health_check():
     """Health check для Docker / мониторинга."""

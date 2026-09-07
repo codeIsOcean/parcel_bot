@@ -52,6 +52,47 @@ const isOwnProfile = computed(() => {
 // ID пользователя для загрузки
 const userId = computed(() => route.params.id || authStore.user?.id)
 
+// Ответ на отзыв: какой отзыв редактируем и текст
+const replyingTo = ref(null)
+const replyText = ref('')
+const replyError = ref('')
+const replySending = ref(false)
+
+// Начать ответ
+const startReply = (review) => {
+  haptic.impact('light')
+  replyingTo.value = review.id
+  replyText.value = ''
+  replyError.value = ''
+}
+
+// Отправить ответ на отзыв
+const sendReply = async (review) => {
+  if (!replyText.value.trim() || replySending.value) return
+  replySending.value = true
+  try {
+    const updated = await usersApi.replyReview(review.id, replyText.value.trim())
+    // Обновляем отзыв в списке без перезагрузки
+    Object.assign(review, { reply_text: updated.reply_text, reply_created_at: updated.reply_created_at })
+    replyingTo.value = null
+    haptic.notification('success')
+  } catch {
+    replyError.value = t('review_reply_error')
+    haptic.notification('error')
+  } finally {
+    replySending.value = false
+  }
+}
+
+// Дата в коротком виде
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '')
+
+// Переход в админ-панель
+const openAdmin = () => {
+  haptic.impact('light')
+  router.push({ name: 'admin' })
+}
+
 // Переход к редактированию профиля
 const editProfile = () => {
   haptic.impact('light')
@@ -154,6 +195,15 @@ onMounted(async () => {
         {{ t('edit_profile') }}
       </button>
 
+      <!-- Вход в админ-панель — только администратору -->
+      <button
+        v-if="isOwnProfile && authStore.isAdmin"
+        class="btn btn-primary btn-block edit-btn"
+        @click="openAdmin"
+      >
+        🛠 {{ t('admin_panel') }}
+      </button>
+
       <!-- Список отзывов -->
       <div class="section">
         <h3 class="section-title">{{ t('reviews') }} ({{ reviews.length }})</h3>
@@ -177,10 +227,43 @@ onMounted(async () => {
             </div>
             <RatingStars :value="review.rating" size="sm" />
           </div>
+          <!-- Теги-похвалы -->
+          <div v-if="review.tags?.length" class="review-tags">
+            <span v-for="tag in review.tags" :key="tag" class="review-tag">{{ t('tag_' + tag) }}</span>
+          </div>
           <!-- Текст отзыва -->
-          <p class="review-text">{{ review.comment }}</p>
+          <p v-if="review.comment" class="review-text">{{ review.comment }}</p>
           <!-- Дата отзыва -->
-          <span class="review-date">{{ review.created_at }}</span>
+          <span class="review-date">{{ formatDate(review.created_at) }}</span>
+
+          <!-- Ответ получателя отзыва -->
+          <div v-if="review.reply_text" class="review-reply">
+            <span class="reply-label">{{ t('review_reply_label') }} · {{ displayName }}</span>
+            <p class="reply-text">{{ review.reply_text }}</p>
+          </div>
+
+          <!-- Форма ответа: только на своём профиле и пока ответа нет -->
+          <template v-else-if="isOwnProfile">
+            <button v-if="replyingTo !== review.id" class="reply-btn" @click="startReply(review)">
+              💬 {{ t('review_reply') }}
+            </button>
+            <div v-else class="reply-form">
+              <textarea
+                v-model="replyText"
+                class="input"
+                rows="2"
+                maxlength="500"
+                :placeholder="t('review_reply_placeholder')"
+              ></textarea>
+              <p v-if="replyError" class="reply-error">{{ replyError }}</p>
+              <div class="reply-actions">
+                <button class="btn btn-primary" :disabled="replySending || !replyText.trim()" @click="sendReply(review)">
+                  {{ t('review_reply_send') }}
+                </button>
+                <button class="btn btn-secondary" @click="replyingTo = null">{{ t('cancel') }}</button>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -188,6 +271,18 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* Теги и ответы в отзывах */
+.review-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.review-tag { padding: 3px 10px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 12px; font-weight: 600; }
+.review-reply { margin-top: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; border-left: 3px solid var(--primary); }
+.reply-label { font-size: 12px; color: var(--text-3); display: block; margin-bottom: 4px; }
+.reply-text { font-size: 14px; color: var(--text-1); line-height: 1.4; }
+.reply-btn { margin-top: 8px; background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+.reply-form { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.reply-actions { display: flex; gap: 8px; }
+.reply-actions .btn { flex: 1; padding: 10px; font-size: 14px; }
+.reply-error { color: var(--danger); font-size: 12px; }
+
 .profile-page {
   padding-bottom: 32px;
 }

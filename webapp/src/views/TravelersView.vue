@@ -65,6 +65,8 @@ const selectTraveler = (traveler) => {
       from: fromCity.value,
       to: toCity.value,
       traveler_id: traveler.traveler_id,
+      // Заявка подаётся на конкретный рейс
+      flight_id: traveler.id,
     },
   })
 }

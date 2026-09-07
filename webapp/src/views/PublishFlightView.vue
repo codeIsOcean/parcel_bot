@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useLocale } from '@/composables/useLocale'
 import { useTelegram } from '@/composables/useTelegram'
 import { useFlightsStore } from '@/stores/flights'
@@ -8,13 +8,22 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import CityPicker from '@/components/shared/CityPicker.vue'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useLocale()
 const { haptic } = useTelegram()
 const flightsStore = useFlightsStore()
 
-// Поля формы рейса
-const fromCity = ref('')
-const toCity = ref('')
+// Вводный экран режима «Перевезти» — показывается один раз
+const INTRO_KEY = 'parcel_bot_traveler_intro_seen'
+const showIntro = ref(!localStorage.getItem(INTRO_KEY))
+const closeIntro = () => {
+  localStorage.setItem(INTRO_KEY, '1')
+  showIntro.value = false
+}
+
+// Поля формы рейса (маршрут может прийти из карточки посылки)
+const fromCity = ref(route.query.from || '')
+const toCity = ref(route.query.to || '')
 const date = ref('')
 const availableKg = ref(null)
 const pricePerKg = ref(null)
@@ -96,6 +105,20 @@ const submitFlight = async () => {
       :title="t('publish_flight')"
       show-back
     />
+
+    <!-- Вводный экран: как работает режим перевозчика и дневной тариф -->
+    <div v-if="showIntro" class="intro-overlay">
+      <div class="intro-card">
+        <span class="intro-icon">✈️</span>
+        <h2 class="intro-title">{{ t('traveler_intro_title') }}</h2>
+        <ol class="intro-list">
+          <li>{{ t('traveler_intro_1') }}</li>
+          <li>{{ t('traveler_intro_2') }}</li>
+          <li>{{ t('traveler_intro_3') }}</li>
+        </ol>
+        <button class="btn btn-primary btn-block" @click="closeIntro">{{ t('traveler_intro_ok') }}</button>
+      </div>
+    </div>
 
     <div class="form-content">
       <!-- Маршрут: откуда и куда -->
@@ -196,6 +219,30 @@ const submitFlight = async () => {
 </template>
 
 <style scoped>
+/* Вводный экран режима перевозчика */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.intro-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: var(--shadow-card);
+}
+.intro-icon { font-size: 40px; display: block; text-align: center; margin-bottom: 8px; }
+.intro-title { font-size: 18px; font-weight: 700; color: var(--text-1); text-align: center; margin-bottom: 14px; }
+.intro-list { padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+
 .publish-flight-page {
   padding-bottom: 32px;
 }

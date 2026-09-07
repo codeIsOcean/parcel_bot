@@ -32,6 +32,26 @@ const routes = [
     component: () => import('@/views/ParcelsView.vue'),
   },
   {
+    // Карточка посылки: отправителю — отклики, перевозчику — «откликнуться»
+    path: '/parcels/:id',
+    name: 'parcel',
+    component: () => import('@/views/ParcelDetailView.vue'),
+    props: true,
+  },
+  {
+    // Карточка рейса из группы или уведомления
+    path: '/flights/:id',
+    name: 'flight',
+    component: () => import('@/views/FlightDetailView.vue'),
+    props: true,
+  },
+  {
+    // Админ-панель
+    path: '/admin',
+    name: 'admin',
+    component: () => import('@/views/AdminView.vue'),
+  },
+  {
     // Входящие заявки перевозчика
     path: '/requests',
     name: 'requests',

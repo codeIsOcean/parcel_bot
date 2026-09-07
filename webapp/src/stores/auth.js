@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
+import { usersApi } from '@/api/users'
 
 /**
  * Store авторизации — управление JWT токеном и данными пользователя.
@@ -18,6 +19,22 @@ export const useAuthStore = defineStore('auth', () => {
   // Авторизован ли пользователь
   const isAuthenticated = computed(() => !!token.value)
 
+  // Администратор (владелец из .env или назначенный из панели)
+  const isAdmin = computed(() => !!user.value?.is_admin)
+
+  // Телефон подтверждён — без него сделки недоступны
+  const hasPhone = computed(() => !!user.value?.phone)
+
+  /**
+   * Подхватить режим из профиля: сервер помнит последний выбор.
+   */
+  const applyServerRole = (data) => {
+    if (data?.role === 'sender' || data?.role === 'traveler') {
+      role.value = data.role
+      localStorage.setItem('parcel_bot_role', data.role)
+    }
+  }
+
   /**
    * Авторизация через Telegram initData.
    */
@@ -31,6 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     // Сохраняем пользователя
     user.value = data.user
+    applyServerRole(data.user)
   }
 
   /**
@@ -38,8 +56,10 @@ export const useAuthStore = defineStore('auth', () => {
    */
   const fetchMe = async () => {
     try {
-      const data = await authApi.getMe()
+      // /users/me отдаёт приватные поля: телефон, признак админа, баланс
+      const data = await usersApi.getMe()
       user.value = data
+      applyServerRole(data)
     } catch (err) {
       // Если interceptor уже обработал refresh и получил новый токен — повторный запрос пройдёт.
       // Если refresh тоже не удался — interceptor уже очистил токены и сделал редирект.
@@ -56,6 +76,10 @@ export const useAuthStore = defineStore('auth', () => {
   const switchRole = (newRole) => {
     role.value = newRole
     localStorage.setItem('parcel_bot_role', newRole)
+    // Сервер запоминает режим, чтобы уведомления и следующий вход были по нему
+    if (token.value) {
+      usersApi.updateProfile({ role: newRole }).catch(() => {})
+    }
   }
 
   /**
@@ -73,6 +97,8 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     role,
     isAuthenticated,
+    isAdmin,
+    hasPhone,
     login,
     fetchMe,
     switchRole,

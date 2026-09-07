@@ -39,4 +39,16 @@ export const usersApi = {
    */
   suggestRoute: (data) =>
     api.post('/routes/suggest', data),
+
+  /**
+   * Ответить на отзыв о себе.
+   */
+  replyReview: (reviewId, text) =>
+    api.post(`/users/reviews/${reviewId}/reply`, { text }),
+
+  /**
+   * Свой профиль с приватными полями (телефон, admin).
+   */
+  getMe: () =>
+    api.get('/users/me'),
 }

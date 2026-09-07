@@ -1,9 +1,12 @@
 import { ref, readonly } from 'vue'
 import ru from '@/locale/ru.json'
 import en from '@/locale/en.json'
+import adminRu from '@/locale/admin.ru.json'
+import adminEn from '@/locale/admin.en.json'
 
-// Доступные локали
-const locales = { ru, en }
+// Доступные локали. Строки админ-панели лежат отдельным файлом,
+// чтобы не раздувать основной словарь.
+const locales = { ru: { ...ru, ...adminRu }, en: { ...en, ...adminEn } }
 
 // Текущий язык (определяется из Telegram или localStorage)
 const currentLang = ref('ru')

@@ -23,6 +23,16 @@ const rating = ref(0)
 // Текст комментария
 const comment = ref('')
 
+// Теги-похвалы: быстрый отзыв одним касанием
+const TAGS = ['on_time', 'careful', 'polite', 'good_price', 'recommended']
+const selectedTags = ref([])
+const toggleTag = (tag) => {
+  haptic.selection()
+  const idx = selectedTags.value.indexOf(tag)
+  if (idx >= 0) selectedTags.value.splice(idx, 1)
+  else selectedTags.value.push(tag)
+}
+
 // Статус отправки
 const submitting = ref(false)
 
@@ -78,6 +88,7 @@ const submitReview = async () => {
     await usersApi.createReview(delivery.value.traveler_id, {
       rating: rating.value,
       comment: comment.value,
+      tags: selectedTags.value,
       parcel_id: props.id,
     })
 
@@ -146,6 +157,23 @@ const goHome = () => {
           </p>
         </div>
 
+        <!-- Теги-похвалы -->
+        <div class="form-group">
+          <label class="form-label">{{ t('rate_tags_title') }}</label>
+          <div class="tags-row">
+            <button
+              v-for="tag in TAGS"
+              :key="tag"
+              type="button"
+              class="tag-chip"
+              :class="{ active: selectedTags.includes(tag) }"
+              @click="toggleTag(tag)"
+            >
+              {{ t('tag_' + tag) }}
+            </button>
+          </div>
+        </div>
+
         <!-- Поле комментария -->
         <div class="form-group">
           <label class="form-label">{{ t('rate_comment') }}</label>
@@ -171,6 +199,20 @@ const goHome = () => {
 </template>
 
 <style scoped>
+/* Теги-похвалы */
+.tags-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tag-chip.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+
 .rate-page {
   padding-bottom: 32px;
 }

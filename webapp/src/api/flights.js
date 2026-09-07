@@ -34,4 +34,10 @@ export const flightsApi = {
   getPopularRoutes: (limit = 6) =>
     api.get('/flights/popular-routes', { params: { limit } }),
 
+
+  /**
+   * Отменить свой рейс.
+   */
+  cancel: (id) =>
+    api.post(`/flights/${id}/cancel`),
 }
