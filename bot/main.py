@@ -13,6 +13,7 @@ from bot.config import (
 )
 from bot.handlers import main_router
 from bot.middlewares.db import DatabaseMiddleware
+from bot.middlewares.gate import DormantGate
 from bot.utils.screen_manager import init_screen_storage
 
 # Настройка логирования
@@ -52,8 +53,14 @@ async def main():
     # Middleware для БД сессий
     dp.update.middleware(DatabaseMiddleware())
 
+    # Белый список сообщений: бот не ведёт диалогов, всё в Mini App
+    dp.message.middleware(DormantGate())
+
     # Подключаем все роутеры
     dp.include_router(main_router)
+
+    # Кнопка меню и список команд — чтобы приложение открывалось из любого места чата
+    await _setup_bot_ui(bot)
 
     try:
         if USE_WEBHOOK:
@@ -65,12 +72,32 @@ async def main():
         logger.info("[BOT] Parcel Bot остановлен")
 
 
+async def _setup_bot_ui(bot: Bot) -> None:
+    """Menu Button на Mini App и команды бота. Ошибки не роняют запуск."""
+    from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
+
+    try:
+        if WEBAPP_URL.startswith("https://"):
+            await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(text="Открыть", web_app=WebAppInfo(url=WEBAPP_URL)),
+            )
+        await bot.set_my_commands([
+            BotCommand(command="app", description="Открыть приложение / Open app"),
+            BotCommand(command="lang", description="Язык / Language"),
+            BotCommand(command="help", description="Справка / Help"),
+        ])
+        logger.info("[BOT] Menu Button и команды настроены")
+    except Exception as e:
+        logger.warning("[BOT] Не удалось настроить Menu Button: %s", e)
+
+
 async def _run_polling(bot: Bot, dp: Dispatcher):
     """Запасной режим: long polling. Не выдерживает двух процессов на токене."""
     # Снимаем вебхук, иначе Telegram не отдаст апдейты через getUpdates
     await bot.delete_webhook(drop_pending_updates=True)
     logger.info("[BOT] Parcel Bot запущен, polling...")
-    await dp.start_polling(bot)
+    # Явно просим и my_chat_member — иначе реестр групп не узнает о добавлении бота
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
 async def _run_webhook(bot: Bot, dp: Dispatcher):
@@ -87,6 +114,8 @@ async def _run_webhook(bot: Bot, dp: Dispatcher):
         url=WEBHOOK_URL,
         secret_token=WEBHOOK_SECRET or None,
         drop_pending_updates=True,
+        # my_chat_member по умолчанию приходит, но фиксируем список явно
+        allowed_updates=dp.resolve_used_update_types(),
     )
     logger.info("[BOT] Webhook зарегистрирован: %s", WEBHOOK_URL)
 
