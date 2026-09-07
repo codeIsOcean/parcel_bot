@@ -60,8 +60,9 @@ class Settings(BaseSettings):
                 result.append(int(raw))
         return result
 
-    # TON Payments
-    ton_wallet_address: str = ""
+    # TON Payments. Кошелёк общий с KVD (test_kvdModerBotProd/bot/config.py),
+    # сеть — mainnet toncenter, тестируем реальными копейками.
+    ton_wallet_address: str = "UQCCJeSDoG4Rpt-RolwnUtOWQnFWyQnMew0KOXZlTs9k95He"
     ton_api_key: str = ""
     ton_api_url: str = "https://toncenter.com/api/v2"
     # Сколько ждём поступления перевода TON
@@ -77,7 +78,8 @@ class Settings(BaseSettings):
 
     # Дневной тариф перевозчика в звёздах. Списывается один раз в сутки,
     # в день первого ответа на заявку. Отправитель не платит никогда.
-    daily_fee_stars: int = 30
+    # ⚠️ ТЕСТОВАЯ СУММА (стенд @parcel07test_bot). Боевое значение: 30.
+    daily_fee_stars: int = 1
 
     # Сколько активных дней даётся бесплатно новому перевозчику.
     # Активный день — день, когда он реально отвечал на заявки.
@@ -85,7 +87,8 @@ class Settings(BaseSettings):
 
     # Пакеты пополнения баланса в звёздах. Произвольные суммы запрещены:
     # payload счёта формирует сервер, подменить сумму нельзя.
-    topup_packages_stars: str = "50,100,250,500,1000"
+    # ⚠️ ТЕСТОВЫЕ ПАКЕТЫ (стенд). Боевые: "50,100,250,500,1000".
+    topup_packages_stars: str = "1,5,10"
 
     # Ориентировочная стоимость одной звезды в долларах — для пересчёта в TON
     star_usd_rate: float = 0.02
