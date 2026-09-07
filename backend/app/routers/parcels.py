@@ -52,7 +52,9 @@ async def create_parcel(
         weight=data.weight,
         size=data.size,
         price=data.price,
-        traveler_id=data.traveler_id,
+        # traveler_id клиенту не доверяем: перевозчик назначается только через принятую заявку,
+        # иначе можно было бы открыть чат и слать пуши любому пользователю по id
+        traveler_id=None,
     )
 
     # Отправитель выбрал конкретный рейс — заявка на него уходит сразу

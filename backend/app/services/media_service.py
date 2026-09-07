@@ -48,6 +48,61 @@ def public_url(relative_path: str) -> str:
     return f"/media/{relative_path.lstrip('/')}"
 
 
+# Сигнатуры файлов: заголовку Content-Type от клиента не верим
+_MAGIC = {
+    ".jpg": (b"\xff\xd8\xff",),
+    ".png": (b"\x89PNG\r\n\x1a\n",),
+    ".webp": (b"RIFF",),
+    ".heic": (b"ftyp",),
+}
+
+# Сколько файлов в сутки может загрузить один пользователь
+MAX_UPLOADS_PER_DAY = 40
+
+# Учёт загрузок за день: user_id → (день, сколько)
+_uploads_today: dict[int, tuple[str, int]] = {}
+
+
+def _looks_like(content: bytes, extension: str) -> bool:
+    """Совпадает ли начало файла с сигнатурой заявленного типа."""
+    head = content[:16]
+    for magic in _MAGIC.get(extension, ()):
+        # ftyp у HEIC стоит с 4-го байта, у остальных — с нулевого
+        if head.startswith(magic) or (extension == ".heic" and head[4:8] == magic):
+            return True
+    return False
+
+
+def check_upload_quota(user_id: int) -> None:
+    """Дневная квота на загрузки — чтобы одним аккаунтом не забить диск."""
+    today = date.today().isoformat()
+    day, count = _uploads_today.get(user_id, (today, 0))
+    if day != today:
+        count = 0
+    if count >= MAX_UPLOADS_PER_DAY:
+        raise MediaError("upload_quota_exceeded")
+    _uploads_today[user_id] = (today, count + 1)
+    # Не даём словарю расти бесконечно
+    if len(_uploads_today) > 10000:
+        for key in [k for k, (d, _) in _uploads_today.items() if d != today]:
+            _uploads_today.pop(key, None)
+
+
+async def read_limited(file, limit: int = MAX_FILE_BYTES) -> bytes:
+    """Прочитать загрузку кусками и оборвать, как только она превысила лимит."""
+    chunks = []
+    total = 0
+    while True:
+        chunk = await file.read(256 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > limit:
+            raise MediaError("file_too_large")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def save_bytes(content: bytes, content_type: str, subdir: str) -> str:
     """Сохранить файл и вернуть относительный путь."""
     extension = ALLOWED_TYPES.get((content_type or "").lower())
@@ -59,6 +114,10 @@ def save_bytes(content: bytes, content_type: str, subdir: str) -> str:
 
     if len(content) > MAX_FILE_BYTES:
         raise MediaError("file_too_large")
+
+    # Внутри должна быть картинка заявленного типа, а не что угодно с нужным заголовком
+    if not _looks_like(content, extension):
+        raise MediaError("unsupported_type")
 
     # Раскладываем по датам, чтобы каталог не разрастался в одну кучу
     day = date.today().isoformat()

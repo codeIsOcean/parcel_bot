@@ -264,11 +264,22 @@ async def create_ton_topup(
     )
 
 
+# Кэш последнего ответа toncenter: ручная «проверка» из кабинета не должна
+# исчерпывать квоту API
+_ton_tx_cache: list | None = None
+_ton_tx_cached_at: float = 0.0
+_TON_TX_TTL = 15.0
+
+
 async def fetch_ton_transactions() -> list | None:
     """Последние поступления на кошелёк сервиса."""
+    global _ton_tx_cache, _ton_tx_cached_at
     wallet = settings.ton_wallet_address
     if not wallet:
         return None
+
+    if _ton_tx_cache is not None and time.time() - _ton_tx_cached_at < _TON_TX_TTL:
+        return _ton_tx_cache
 
     headers = {"X-API-Key": settings.ton_api_key} if settings.ton_api_key else {}
     try:
@@ -287,7 +298,9 @@ async def fetch_ton_transactions() -> list | None:
         logger.warning("[TON] Ответ с ошибкой: %s", str(data)[:200])
         return None
 
-    return data.get("result", [])
+    _ton_tx_cache = data.get("result", [])
+    _ton_tx_cached_at = time.time()
+    return _ton_tx_cache
 
 
 def _extract_comment(transaction: dict) -> str:

@@ -79,6 +79,9 @@ class Parcel(TimestampMixin, Base):
     # перевозчик вводит его при выдаче — это подтверждение доставки.
     handover_code: Mapped[str | None] = mapped_column(String(6), nullable=True)
 
+    # Сколько раз перевозчик ввёл неверный код — защита от перебора
+    handover_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     # Когда посылка передана перевозчику
     handed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

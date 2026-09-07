@@ -41,3 +41,7 @@ alembic/versions/__pycache__/
 
 # Archives and old copies
 *.zip
+
+# Все env-файлы, кроме примера: секреты в репозиторий не попадают
+.env.*
+!.env.example

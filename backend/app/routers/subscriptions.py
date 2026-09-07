@@ -58,6 +58,9 @@ async def create_subscription(
     session: AsyncSession = Depends(get_session),
 ):
     """Создать подписку (после подтверждения оплаты)."""
+    # Оплата подписки сервером не проверяется — до реализации через
+    # successful_payment/TON-поллер активировать подписку нельзя
+    raise HTTPException(status_code=501, detail="subscription_payment_not_implemented")
     # Определяем цену по плану
     prices = {
         "monthly": settings.subscription_monthly_price,

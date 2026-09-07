@@ -75,8 +75,10 @@ app = FastAPI(
     title="Parcel Bot API",
     description="API для сервиса доставки посылок через попутчиков",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    # В проде документация выключена: карта API атакующему ни к чему
+    docs_url="/docs" if settings.expose_docs else None,
+    redoc_url="/redoc" if settings.expose_docs else None,
+    openapi_url="/openapi.json" if settings.expose_docs else None,
     lifespan=lifespan,
 )
 

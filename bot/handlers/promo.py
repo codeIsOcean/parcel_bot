@@ -154,6 +154,11 @@ async def on_group_message(message: Message, session: AsyncSession, bot: Bot):
     if _on_cooldown(message.chat.id, message.from_user.id):
         return
     _last_offer[(message.chat.id, message.from_user.id)] = time.time()
+    # Чистим просроченные записи, чтобы память не текла
+    if len(_last_offer) > 5000:
+        now = time.time()
+        for key in [k for k, ts in _last_offer.items() if now - ts >= OFFER_COOLDOWN_SECONDS]:
+            _last_offer.pop(key, None)
 
     route = f"{cities[0].title()} → {cities[1].title()}"
     logger.info(

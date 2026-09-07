@@ -7,11 +7,14 @@
 """
 
 import logging
+
+from backend.app.config import settings
 import re
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.models.parcel import Parcel
 from shared.models.report import Report, ReportReason, ReportStatus
 from shared.models.user import User
 
@@ -85,6 +88,17 @@ async def create_report(
     except ValueError:
         raise ValueError(f"Invalid reason: {reason}")
 
+    # Жалоба привязана к сделке: обе стороны должны быть её участниками.
+    # Иначе любой аккаунт мог бы «нажаловаться» на кого угодно по чужим id.
+    if not parcel_id:
+        raise ValueError("Report must reference a parcel")
+    parcel = await session.get(Parcel, parcel_id)
+    if not parcel:
+        raise ValueError("Parcel not found")
+    participants = {parcel.sender_id, parcel.traveler_id}
+    if author.id not in participants or target_id not in participants:
+        raise ValueError("Both users must be participants of this parcel")
+
     # Одна жалоба от одного автора на одного пользователя в рамках одной посылки
     duplicate = (await session.execute(
         select(Report).where(
@@ -109,11 +123,26 @@ async def create_report(
     # Счётчик жалоб на пользователе — быстрый признак для выдачи и модерации
     target.reports_count = (target.reports_count or 0) + 1
 
-    # Порог набран — закрываем доступ до ручного разбора
-    if target.reports_count >= AUTO_BLOCK_THRESHOLD and not target.is_blocked:
+    await session.flush()
+
+    # Порог считаем по РАЗНЫМ авторам открытых/подтверждённых жалоб, чтобы один
+    # человек не смог заблокировать другого серией жалоб. Администраторов
+    # автоблокировка не касается — их разбирают вручную.
+    distinct_authors = (await session.execute(
+        select(func.count(func.distinct(Report.author_id))).where(
+            Report.target_id == target_id,
+            Report.status != ReportStatus.REVIEWED,
+        )
+    )).scalar() or 0
+    if (
+        distinct_authors >= AUTO_BLOCK_THRESHOLD
+        and not target.is_blocked
+        and not target.is_admin
+        and target.id not in settings.admin_id_list
+    ):
         target.is_blocked = True
         logger.warning(
-            "[MODERATION] Автоблокировка: user=%s, жалоб=%s", target_id, target.reports_count,
+            "[MODERATION] Автоблокировка: user=%s, авторов жалоб=%s", target_id, distinct_authors,
         )
 
     await session.commit()

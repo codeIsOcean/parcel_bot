@@ -131,6 +131,7 @@ async def cancel_flight(
 @router.get("/{flight_id}", response_model=FlightResponse)
 async def get_flight_detail(
     flight_id: int,
+    _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
     """Получить детали рейса по ID."""

@@ -74,12 +74,13 @@ async def refresh_token(
     session: AsyncSession = Depends(get_session),
 ):
     """Обновить JWT access token по refresh token."""
-    from jose import JWTError, jwt as jose_jwt
+    import jwt as pyjwt
+    from jwt import PyJWTError
     from backend.app.config import settings as app_settings
 
     try:
         # Декодируем refresh token
-        payload = jose_jwt.decode(
+        payload = pyjwt.decode(
             data.refresh_token,
             app_settings.secret_key,
             algorithms=[app_settings.jwt_algorithm],
@@ -93,7 +94,7 @@ async def refresh_token(
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
 
     # Загружаем пользователя из БД

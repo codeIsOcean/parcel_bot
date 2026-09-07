@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 15
-    jwt_refresh_token_expire_days: int = 7
+    jwt_refresh_token_expire_days: int = 2
 
     # WebApp
     webapp_url: str = ""
@@ -114,6 +114,10 @@ class Settings(BaseSettings):
     # Куда складываются загруженные фотографии посылок
     media_root: str = "/app/media"
 
+    # Публиковать ли /docs и /redoc. В проде — нет: это карта API для атакующего.
+    expose_docs: bool = False
+
+    # Срок refresh-токена. Отозвать его нельзя, поэтому держим коротким.
     # Logging
     log_level: str = "INFO"
 
@@ -133,11 +137,12 @@ class Settings(BaseSettings):
 # Синглтон конфигурации
 settings = Settings()
 
-# Проверка безопасности: запрет запуска с дефолтным секретным ключом
-if settings.secret_key == "change-me-in-production":
-    import warnings
-    warnings.warn(
-        "SECURITY WARNING: Using default secret_key! "
-        "Set SECRET_KEY environment variable in production.",
-        stacklevel=1,
+# Проверка безопасности: с дефолтным или пустым ключом JWT подпишет кто угодно —
+# запуск запрещаем, а не предупреждаем
+if settings.secret_key in ("", "change-me-in-production"):
+    raise RuntimeError(
+        "SECRET_KEY не задан или дефолтный. Сгенерируйте: python3 -c \"import secrets; print(secrets.token_hex(32))\""
     )
+if len(settings.secret_key) < 32:
+    import warnings
+    warnings.warn("SECRET_KEY короче 32 символов — слабый ключ подписи JWT", stacklevel=1)

@@ -287,8 +287,8 @@ onMounted(async () => {
         <span class="route-arrow">›</span>
       </div>
 
-      <!-- Подписка -->
-      <div class="card subscription-card" @click="router.push('/subscription')">
+      <!-- Подписка скрыта: второй тариф не реализован (оплата не проверяется сервером) -->
+      <div v-if="false" class="card subscription-card" @click="router.push('/subscription')">
         <span class="sub-icon">⭐</span>
         <div class="sub-info">
           <div class="sub-title">{{ t('subscription') }}</div>

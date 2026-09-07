@@ -51,6 +51,7 @@ async def update_my_profile(
 @router.get("/{user_id}", response_model=UserProfile)
 async def get_user_profile(
     user_id: int,
+    _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
     """Получить профиль пользователя."""
@@ -65,6 +66,7 @@ async def get_user_reviews(
     user_id: int,
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    _: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
     """Получить отзывы о пользователе."""

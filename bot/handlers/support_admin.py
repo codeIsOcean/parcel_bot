@@ -6,6 +6,7 @@
 в ту же переписку, которую пользователь видит в Mini App.
 """
 
+import html
 import logging
 
 from aiogram import Bot, F, Router
@@ -103,7 +104,8 @@ async def on_support_queue(message: Message, session: AsyncSession) -> None:
     lines = [nt("ru", "support_queue_title")]
     for ticket in tickets:
         user = await session.get(User, ticket.user_id)
-        name = user.full_name if user else str(ticket.user_id)
+        # Имя — пользовательский ввод, сообщение уходит как HTML
+        name = html.escape(user.full_name) if user else str(ticket.user_id)
         # Каждая строка — обращение с ссылкой-командой для ответа
         lines.append(f"#{ticket.id} · {name} · /reply_{ticket.user_id}")
 

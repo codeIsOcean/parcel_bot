@@ -8,6 +8,7 @@
 и называет получателю, перевозчик вводит код при выдаче.
 """
 
+import hmac
 import logging
 import secrets
 from datetime import datetime, timezone
@@ -22,7 +23,10 @@ from shared.models.user import User
 logger = logging.getLogger(__name__)
 
 # Длина кода выдачи
-HANDOVER_CODE_LENGTH = 4
+HANDOVER_CODE_LENGTH = 6
+
+# Сколько неверных кодов допускаем, прежде чем закрыть ввод
+MAX_HANDOVER_ATTEMPTS = 5
 
 
 class DeliveryError(Exception):
@@ -135,9 +139,17 @@ async def mark_delivered(
     if not parcel.handover_code:
         raise DeliveryError("Handover code is missing, contact support")
 
+    # После серии неверных кодов ввод закрыт: перебор 6 цифр невозможен
+    if (parcel.handover_attempts or 0) >= MAX_HANDOVER_ATTEMPTS:
+        raise DeliveryError("handover_locked")
+
     # Сравнение без учёта пробелов, которые пользователь может ввести случайно
-    if (code or "").strip() != parcel.handover_code:
-        logger.info("[DELIVERY] Неверный код выдачи: parcel=%s", parcel_id)
+    if not hmac.compare_digest((code or "").strip(), parcel.handover_code):
+        parcel.handover_attempts = (parcel.handover_attempts or 0) + 1
+        await session.commit()
+        logger.info("[DELIVERY] Неверный код выдачи: parcel=%s, попытка %s", parcel_id, parcel.handover_attempts)
+        if parcel.handover_attempts >= MAX_HANDOVER_ATTEMPTS:
+            raise DeliveryError("handover_locked")
         raise DeliveryError("Invalid handover code")
 
     parcel.status = ParcelStatus.DELIVERED

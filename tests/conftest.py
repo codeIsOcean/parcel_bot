@@ -14,7 +14,7 @@ import pytest_asyncio
 # даже если в окружении контейнера настоящий BOT_TOKEN.
 os.environ["BOT_TOKEN"] = ""
 os.environ["FREE_ACCESS_UNTIL"] = ""
-os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-0123456789abcdef0123456789abcdef")
 # Папка медиа: приложение создаёт её при импорте, /app вне контейнера недоступен
 import tempfile
 os.environ.setdefault("MEDIA_ROOT", tempfile.mkdtemp(prefix="parcel_media_"))

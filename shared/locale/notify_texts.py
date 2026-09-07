@@ -5,6 +5,8 @@
 всё берём через nt().
 """
 
+import html
+
 # Ключ → {язык: шаблон}. Шаблоны форматируются через str.format(**kwargs).
 NOTIFY_TEXTS: dict[str, dict[str, str]] = {
     # === Заявки на перевозку ===
@@ -268,14 +270,19 @@ DEFAULT_LANG = "ru"
 
 
 def nt(lang: str | None, key: str, **kwargs) -> str:
-    """Вернуть текст уведомления на нужном языке с подстановкой значений."""
+    """Вернуть текст уведомления на нужном языке с подстановкой значений.
+
+    Сообщения уходят с parse_mode=HTML, поэтому каждая подстановка
+    экранируется: имя «<b» или описание с <a href> не сломают и не подменят текст.
+    """
     # Неизвестный язык откатываем на русский
     variants = NOTIFY_TEXTS.get(key)
     if not variants:
         return key
     template = variants.get(lang or DEFAULT_LANG) or variants[DEFAULT_LANG]
+    safe = {k: html.escape(str(v), quote=False) if isinstance(v, str) else v for k, v in kwargs.items()}
     try:
-        return template.format(**kwargs)
+        return template.format(**safe)
     except KeyError:
         # Не хватило подстановки — отдаём шаблон как есть, чтобы не терять уведомление
         return template

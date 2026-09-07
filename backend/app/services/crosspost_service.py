@@ -14,7 +14,6 @@
 или рейс закрыт, пост редактируется — кнопка снимается, ставится «Закрыто».
 """
 
-import html
 import logging
 from dataclasses import dataclass
 
@@ -67,10 +66,10 @@ def flight_text(flight: Flight, traveler: User) -> str:
     """Текст объявления о рейсе."""
     return nt(
         "ru", "crosspost_flight",
-        from_city=html.escape(flight.from_city), to_city=html.escape(flight.to_city),
+        from_city=flight.from_city, to_city=flight.to_city,
         flight_date=flight.flight_date.strftime("%d.%m.%Y"),
         available_kg=flight.available_kg, price_per_kg=flight.price_per_kg,
-        traveler_name=html.escape(traveler.full_name), traveler_rating=_rating(traveler),
+        traveler_name=traveler.full_name, traveler_rating=_rating(traveler),
     )
 
 
@@ -78,10 +77,10 @@ def parcel_text(parcel: Parcel, sender: User) -> str:
     """Текст объявления о посылке."""
     return nt(
         "ru", "crosspost_parcel",
-        from_city=html.escape(parcel.from_city), to_city=html.escape(parcel.to_city),
-        description=html.escape(parcel.description[:300]),
+        from_city=parcel.from_city, to_city=parcel.to_city,
+        description=parcel.description[:300],
         weight=parcel.weight, price=parcel.price,
-        sender_name=html.escape(sender.full_name), sender_rating=_rating(sender),
+        sender_name=sender.full_name, sender_rating=_rating(sender),
     )
 
 

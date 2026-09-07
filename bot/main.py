@@ -108,6 +108,9 @@ async def _run_webhook(bot: Bot, dp: Dispatcher):
     # Без публичного адреса вебхук зарегистрировать нельзя — падаем явно
     if not WEBHOOK_URL:
         raise RuntimeError("USE_WEBHOOK=true, но BOT_WEBHOOK_URL не задан")
+    # Без секрета любой сможет прислать «successful_payment» и зачислить себе звёзды
+    if not WEBHOOK_SECRET:
+        raise RuntimeError("USE_WEBHOOK=true, но WEBHOOK_SECRET не задан")
 
     # Регистрируем адрес в Telegram вместе с секретом, которым он подпишет запросы
     await bot.set_webhook(

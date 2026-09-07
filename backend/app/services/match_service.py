@@ -6,7 +6,7 @@ from backend.app.services import chat_service, crosspost_service, notification_s
 from backend.app.services.access_service import ensure_can_respond
 from shared.models.match import Match, MatchStatus
 from shared.models.parcel import Parcel, ParcelStatus
-from shared.models.flight import Flight
+from shared.models.flight import Flight, FlightStatus
 from shared.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,17 @@ async def create_match(
         raise ValueError("Parcel not found")
     if sender_id and parcel.sender_id != sender_id:
         raise ValueError("Not authorized: not the parcel owner")
+    if parcel.status != ParcelStatus.PENDING:
+        raise ValueError("Parcel is not pending")
+
+    # Рейс должен существовать, принимать заявки и вмещать посылку
+    target_flight = await session.get(Flight, flight_id)
+    if not target_flight or target_flight.status != FlightStatus.ACTIVE:
+        raise ValueError("Flight is not available")
+    if target_flight.traveler_id == parcel.sender_id:
+        raise ValueError("Cannot request own flight")
+    if parcel.weight and parcel.weight > target_flight.available_kg:
+        raise ValueError("Parcel is heavier than available space")
 
     # Проверяем что нет дубля
     existing = await session.execute(
@@ -318,7 +329,11 @@ async def accept_match(
         select(Flight).where(Flight.id == match.flight_id)
     )
     flight = flight_result.scalar_one_or_none()
-    parcel = await session.get(Parcel, match.parcel_id)
+    # Строку посылки блокируем: два одновременных «принять» не должны оба пройти
+    # (на SQLite блокировка не поддерживается и молча пропускается)
+    parcel = (await session.execute(
+        select(Parcel).where(Parcel.id == match.parcel_id).with_for_update()
+    )).scalar_one_or_none()
     if not flight or not parcel:
         raise ValueError("Match is broken")
     if not _may_answer(match, flight, parcel, actor_id):

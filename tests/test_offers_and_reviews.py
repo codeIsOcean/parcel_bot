@@ -147,7 +147,7 @@ async def test_review_tags_and_reply(client, session, monkeypatch):
     # Второй ответ запрещён
     assert (await client.post(f"/api/v1/users/reviews/{review['id']}/reply", json={"text": "Ещё"}, headers=auth(TRAVELER))).status_code == 409
 
-    listed = (await client.get(f"/api/v1/users/{TRAVELER}/reviews")).json()
+    listed = (await client.get(f"/api/v1/users/{TRAVELER}/reviews", headers=auth(OTHER))).json()
     assert listed[0]["reply_text"] == "Спасибо!" and listed[0]["tags"] == ["on_time", "careful"]
 
 

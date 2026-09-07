@@ -31,9 +31,9 @@ async def upload_photo(
     Отдельный шаг: сначала файл, потом его адрес подставляется в посылку.
     Так работает и создание посылки, и отметка этапов доставки.
     """
-    content = await file.read()
-
     try:
+        media_service.check_upload_quota(user.id)
+        content = await media_service.read_limited(file)
         path = media_service.save_bytes(content, file.content_type or "", subdir="parcels")
     except MediaError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -68,8 +68,9 @@ async def attach_parcel_photo(
     if step in ("handover", "delivery") and user.id != parcel.traveler_id:
         raise HTTPException(status_code=403, detail="Only traveler can attach this photo")
 
-    content = await file.read()
     try:
+        media_service.check_upload_quota(user.id)
+        content = await media_service.read_limited(file)
         path = media_service.save_bytes(content, file.content_type or "", subdir=f"parcels/{step}")
     except MediaError as e:
         raise HTTPException(status_code=400, detail=str(e))

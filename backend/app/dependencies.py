@@ -6,7 +6,8 @@ from urllib.parse import parse_qs
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +27,11 @@ def verify_telegram_init_data(init_data: str) -> dict | None:
     Проверяет HMAC-SHA256 подпись.
     Возвращает данные пользователя или None при невалидности.
     """
+    # Без токена бота ключ подписи известен всем — такие initData принимать нельзя
+    if not settings.bot_token:
+        logger.error("[AUTH] BOT_TOKEN не задан — авторизация через initData невозможна")
+        return None
+
     try:
         # Парсим query string
         parsed = parse_qs(init_data, keep_blank_values=True)
@@ -58,14 +64,16 @@ def verify_telegram_init_data(init_data: str) -> dict | None:
         if not hmac.compare_digest(computed_hash, received_hash):
             return None
 
-        # Проверяем auth_date — отклоняем данные старше 1 часа (рекомендация Telegram)
+        # auth_date обязателен: без него нельзя отсечь старые (украденные) initData
         auth_date_str = parsed.get("auth_date", [None])[0]
-        if auth_date_str:
-            auth_date = int(auth_date_str)
-            now = int(datetime.now(timezone.utc).timestamp())
-            if now - auth_date > 3600:
-                logger.warning("[AUTH] initData устарели: auth_date=%s, now=%s", auth_date, now)
-                return None
+        if not auth_date_str:
+            return None
+        auth_date = int(auth_date_str)
+        now = int(datetime.now(timezone.utc).timestamp())
+        # Отклоняем данные старше 1 часа (рекомендация Telegram) и «из будущего»
+        if now - auth_date > 3600 or auth_date - now > 300:
+            logger.warning("[AUTH] initData устарели: auth_date=%s, now=%s", auth_date, now)
+            return None
 
         return parsed
     except Exception as e:
@@ -126,10 +134,13 @@ async def get_current_user(
         if token_type != "access":
             raise HTTPException(status_code=401, detail="Invalid token type")
 
-        user_id = int(payload.get("sub", 0))
+        try:
+            user_id = int(payload.get("sub", 0))
+        except (TypeError, ValueError):
+            user_id = 0
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     # Загружаем пользователя из БД

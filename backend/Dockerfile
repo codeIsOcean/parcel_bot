@@ -19,4 +19,6 @@ COPY alembic.ini /app/alembic.ini
 
 # Запуск: миграции + uvicorn
 ENV PYTHONPATH=/app
-CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]
+# --proxy-headers: порт слушает только localhost за nginx, X-Forwarded-For можно доверять —
+# иначе rate limiting видит всех пользователей как один IP docker-моста
+CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]

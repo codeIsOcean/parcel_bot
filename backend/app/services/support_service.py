@@ -200,14 +200,15 @@ async def send_user_message(
 def _notify_admins(user: User, ticket_id: int, text: str) -> None:
     """Разослать обращение администраторам."""
     # Текст пользователя экранируем: он попадает в HTML-разметку
-    safe_text = html.escape(text[:800])
+    # Экранирует сам nt(): двойное экранирование дало бы &amp;lt;
+    safe_text = text[:800]
     username = f"@{user.username}" if user.username else f"id {user.id}"
 
     body = nt(
         "ru", "support_admin_push",
         ticket_id=ticket_id,
-        user_name=html.escape(user.full_name),
-        username=html.escape(username),
+        user_name=user.full_name,
+        username=username,
         text=safe_text,
     )
 
@@ -257,7 +258,7 @@ async def send_admin_reply(
     # Пуш пользователю с кнопкой на экран поддержки
     user = await session.get(User, user_id)
     if user and not user.bot_blocked:
-        body = nt(user.lang, "support_user_push", text=html.escape(text[:800]))
+        body = nt(user.lang, "support_user_push", text=text[:800])
         fire_and_forget(send_message(
             user_id, body,
             reply_markup=webapp_button(nt(user.lang, "btn_open_support"), "/support"),

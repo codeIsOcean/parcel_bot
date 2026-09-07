@@ -160,5 +160,20 @@ jobs:
             # --remove-orphans: удаляет контейнеры которых больше нет в compose
             docker compose -f docker-compose.prod.yml up -d --no-deps --remove-orphans backend bot webapp
 
+            # nginx: новый конфиг с проверкой и автооткатом (правило SERVER_OPS_RULES 4.2)
+            NGX=/etc/nginx/sites-available/fly.conf
+            if ! cmp -s nginx/fly.conf "$NGX"; then
+              cp "$NGX" "$NGX.bak"
+              cp nginx/fly.conf "$NGX"
+              if nginx -t; then
+                systemctl reload nginx
+                echo "nginx reloaded"
+              else
+                cp "$NGX.bak" "$NGX"
+                echo "nginx config invalid — rolled back"
+                exit 1
+              fi
+            fi
+
             # Удаляем старые образы
             docker image prune -f
