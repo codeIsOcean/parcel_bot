@@ -27,6 +27,13 @@ parcel_bot/
 └── docker-compose.yml
 ```
 
+## Архитектура: Mini App-first (решение владельца 2026-09-07)
+Вся операционка — посылки, рейсы, отклики, чаты, оценки, профиль, оплата, админка — живёт
+в **Mini App**. Бот — тонкая обёртка: вход и онбординг (язык → телефон), уведомления с кнопкой
+на нужный экран, приём оплаты Stars, ответы поддержки, реестр групп. Операционных хендлеров
+и reply-меню в боте НЕТ и добавлять их не нужно. Контракт: `docs/BOT_VS_MINIAPP.md`.
+Админ-панель: `docs/ADMIN_PANEL.md`. Группы и кросс-постинг: `docs/GROUPS.md`.
+
 ## Критические правила
 1. **DEVELOPER_RULES.md** — ОБЯЗАТЕЛЬНО читать перед работой
 2. **CHECKLIST.md** — проверять ПОСЛЕ каждой задачи
@@ -42,9 +49,11 @@ parcel_bot/
 - **Описание:** This is a test of Parcel Bot
 
 ## Продакшн-сервер
-- **IP:** 176.223.129.98
-- **Доступ:** `ssh root@176.223.129.98` (ключ ~/.ssh/id_ed25519)
-- **Деплой:** push в main → CI/CD автоматически пересобирает и делает graceful restart
+- **IP:** 80.209.231.69 (новый сервер), проект в `/opt/parcel_bot`, compose — `docker-compose.prod.yml`
+- **Доступ:** `ssh root@80.209.231.69` (ключ ~/.ssh/id_ed25519)
+- **Деплой:** push в main → CI: тесты + одна голова Alembic → сборка образов → на сервере
+  дамп БД → `alembic upgrade head` (падение = красный деплой) → graceful `up -d`
+- **Обязательные переменные `.env` на сервере:** `BOT_USERNAME` (кнопки в группах), `ADMIN_IDS`, `WEBAPP_URL`
 
 ### Контейнеры на сервере
 | Контейнер | Описание | Порт |
@@ -71,9 +80,10 @@ docker logs parcel_bot_tg --tail=50
 docker restart parcel_bot_api
 docker restart parcel_bot_tg
 
-# Полный рестарт всех контейнеров
-cd /root/parcel_bot && docker-compose down && docker-compose up -d
+# Миграции вручную (из /opt/parcel_bot)
+docker compose -f docker-compose.prod.yml run --rm --no-deps bot alembic upgrade head
 ```
+⚠️ `docker compose down -v` ЗАПРЕЩЁН — тома БД внешние, но не рисковать.
 
 ## Команды разработки (локально)
 ```bash

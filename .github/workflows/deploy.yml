@@ -142,20 +142,22 @@ jobs:
             # Pull новых образов
             docker compose -f docker-compose.prod.yml pull backend bot webapp
 
+            # Дамп базы перед миграцией: схема меняется — откат должен быть возможен
+            mkdir -p /opt/parcel_bot/backups
+            docker exec parcel_bot_db pg_dump -U postgres parcel_bot | gzip \
+              > "/opt/parcel_bot/backups/pre_deploy_$(date +%Y%m%d_%H%M%S).sql.gz"
+            # Храним последние 7 дампов
+            ls -1t /opt/parcel_bot/backups/pre_deploy_*.sql.gz | tail -n +8 | xargs -r rm -f
+
+            # Миграции — ДО перезапуска приложений и с проверкой кода возврата:
+            # сломанная схема не должна уехать на прод «зелёным» деплоем
+            echo "Applying Alembic migrations..."
+            docker compose -f docker-compose.prod.yml run --rm --no-deps bot alembic upgrade head
+
             # Graceful deployment: быстрый перезапуск готовых образов (даунтайм ~2-3 сек)
             # --no-deps: не перезапускает dependency контейнеры (postgres, redis)
             # --remove-orphans: удаляет контейнеры которых больше нет в compose
             docker compose -f docker-compose.prod.yml up -d --no-deps --remove-orphans backend bot webapp
-
-            # Ждём запуска контейнера бота
-            echo "Waiting for bot container to start..."
-            sleep 10
-
-            # Применяем миграции Alembic через контейнер бота
-            echo "Applying Alembic migrations..."
-            docker compose -f docker-compose.prod.yml exec -T bot alembic upgrade head || {
-              echo "WARNING: Migration failed, but continuing..."
-            }
 
             # Удаляем старые образы
             docker image prune -f

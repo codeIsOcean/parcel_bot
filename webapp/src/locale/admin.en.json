@@ -9,7 +9,6 @@
   "admin_load_more": "Show more",
   "admin_filter_all": "All",
   "admin_requests": "Requests",
-
   "admin_tab_stats": "Stats",
   "admin_tab_users": "Users",
   "admin_tab_parcels": "Parcels",
@@ -19,7 +18,6 @@
   "admin_tab_payments": "Payments",
   "admin_tab_support": "Support",
   "admin_tab_broadcast": "Broadcast",
-
   "admin_stats_users": "Users",
   "admin_stats_parcels": "Parcels",
   "admin_stats_flights": "Flights",
@@ -43,7 +41,6 @@
   "admin_stats_posts": "Group posts",
   "admin_stats_reviews": "Reviews",
   "admin_stats_avg_rating": "Average rating",
-
   "admin_users_search": "ID, @username, name or phone",
   "admin_users_filter_all": "All",
   "admin_users_filter_blocked": "Blocked",
@@ -69,7 +66,6 @@
   "admin_balance_note": "Note (optional)",
   "admin_balance_add": "Add",
   "admin_balance_charge": "Charge",
-
   "admin_err_user_not_found": "User not found",
   "admin_err_cannot_block_admin": "Cannot block an administrator or yourself",
   "admin_err_cannot_revoke_env_admin": "The owner cannot be revoked",
@@ -83,7 +79,6 @@
   "admin_err_report_not_found": "Report not found",
   "admin_err_bad_status": "Invalid status",
   "admin_err_bad_audience": "Invalid audience",
-
   "admin_search_parcels": "ID, city or description",
   "admin_search_flights": "ID or city",
   "admin_status_pending": "Looking for traveler",
@@ -95,7 +90,6 @@
   "admin_status_active": "Active",
   "admin_status_full": "Full",
   "admin_status_completed": "Completed",
-
   "admin_groups_hint": "First add the bot to the group or channel, then paste its link, @username or chat ID.",
   "admin_groups_link_placeholder": "https://t.me/… or @username or -100…",
   "admin_groups_add": "Connect",
@@ -112,7 +106,6 @@
   "admin_group_err_not_found": "Chat not found. Is the bot added to the group?",
   "admin_group_err_not_group": "This is not a group or channel",
   "admin_group_err_no_token": "Bot is not configured on the server",
-
   "admin_reports_open": "Open",
   "admin_reports_empty": "No reports",
   "admin_reason_scam": "Scam",
@@ -125,7 +118,6 @@
   "admin_report_status_confirmed": "Confirmed",
   "admin_report_reviewed": "No action",
   "admin_report_confirmed": "Confirm",
-
   "admin_pay_status_pending": "Pending",
   "admin_pay_status_completed": "Paid",
   "admin_pay_status_failed": "Failed",
@@ -136,7 +128,6 @@
   "admin_pay_kind_topup": "Top-up",
   "admin_pay_kind_post": "Posting",
   "admin_pay_kind_subscription": "Subscription",
-
   "admin_support_open": "Open",
   "admin_support_archived": "Archive",
   "admin_support_empty": "No tickets",
@@ -145,7 +136,6 @@
   "admin_support_reply_placeholder": "Reply to the user…",
   "admin_support_send": "Send",
   "admin_support_no_ticket": "This user has not contacted support",
-
   "admin_audience_all": "Everyone",
   "admin_audience_senders": "Senders",
   "admin_audience_travelers": "Travelers",
@@ -153,5 +143,6 @@
   "admin_broadcast_placeholder": "Broadcast text…",
   "admin_broadcast_send": "Send",
   "admin_broadcast_confirm": "Tap again to send",
-  "admin_broadcast_sent": "Sent: {count}"
+  "admin_broadcast_sent": "Sent: {count}",
+  "admin_err_insufficient": "Not enough stars on balance"
 }
